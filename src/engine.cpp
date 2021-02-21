@@ -9,14 +9,14 @@ void engine::Initialize()
     inputManager.Initialize();
 
     // initialize tilemap and position camera at the center of it
-    int mapSizeX = 200;
+    int mapSizeX = 201;
     int mapSizeY = 100;
     f32 tileSizeMeters = 1.f;
     map = tilemap(mapSizeX, mapSizeY, tileSizeMeters);
     mainCamera.SetPosition({ MetersToPixels(tileSizeMeters) * mapSizeX * 0.5f, MetersToPixels(tileSizeMeters) * mapSizeY * 0.5f });
 
     renderer.RegisterTexture("../images/test.png");
-    renderer.RegisterTexture("../images/chev.jpg");
+    renderer.RegisterTexture("../images/dirt.png");
     renderer.SyncTextureUpdates();
 }
 
@@ -43,9 +43,9 @@ void engine::HandleInput()
     if (inputManager.IsKeyPressed("d"))
         mainCamera.Move({ movementSpeed, 0.f });
     if (inputManager.IsKeyPressed("w"))
-        mainCamera.Move({ 0.f, movementSpeed });
+        mainCamera.Move({ 0.f, movementSpeed * 1.2f });
     if (inputManager.IsKeyPressed("s"))
-        mainCamera.Move({ 0.f, -movementSpeed });
+        mainCamera.Move({ 0.f, -movementSpeed * 1.2f });
 
     if (inputManager.WasMouseJustPressed(1)) // lmb
     {
@@ -67,7 +67,7 @@ void engine::RenderTestScene()
     transform.location = mainCamera.GetPosition();
     
     map.Draw(mainCamera.GetPosition());
-    renderer.DrawQuad(0, transform);
+    renderer.DrawQuad(0, transform, { 0.f, 0.f, 0.f, 1.f });
 }
 
 void engine::EndFrame()
@@ -81,7 +81,7 @@ void engine::EndFrame()
 
     // average delta time for smoother steps
     auto frameStop = std::chrono::high_resolution_clock::now();
-    deltaTimes[frameCount] = std::max((double)(std::chrono::duration_cast<std::chrono::milliseconds>(frameStop - frameStart)).count(), 0.5);
+    deltaTimes[frameCount] = std::max((double)(std::chrono::duration_cast<std::chrono::milliseconds>(frameStop - frameStart)).count(), 1.0);
     frameCount++;
 
     if (frameCount == deltaTimes.size())

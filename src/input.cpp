@@ -46,12 +46,9 @@ glm::vec2 input_manager::GetMouseWorldPosition()
 {
     glm::vec2 screenSize = Engine->GetRenderer().GetWindowSize();
     glm::vec2 screenPos = GetMouseScreenPosition();
-    glm::vec4 screenPos4 = { 2.0f * screenPos.x / screenSize.x - 1.f, -(2.f * screenPos.y / screenSize.y - 1.f), 0.f, 1.f };
-
-    glm::vec4 worldPos = glm::inverse(Engine->GetRenderer().GetProjectionMatrix()) * screenPos4;
-    worldPos = glm::inverse(Engine->GetCamera().GetViewMatrix()) * worldPos;
-    //worldPos /= worldPos.w;
-    std::cout << worldPos.x << " " << worldPos.y << std::endl;
+    glm::vec2 cameraPos = Engine->GetCamera().GetPosition();
+    screenPos = { 2.0f * screenPos.x / screenSize.x - 1.f, -(2.f * screenPos.y / screenSize.y - 1.f) };
+    glm::vec2 worldPos = { screenPos.x * MetersToPixels(ScreenMetersX) * 0.5f + cameraPos.x, screenPos.y * MetersToPixels(ScreenMetersX) / Engine->GetRenderer().GetAspectRatio() * 0.5f + cameraPos.y };
     return worldPos;
 }
 

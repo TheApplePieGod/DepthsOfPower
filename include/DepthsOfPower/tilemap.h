@@ -19,7 +19,7 @@ public:
         tiles.resize(width * height);
         for (u64 i = 0; i < tiles.size(); i++)
         {
-            tiles[i].textureId = i % 2 + 1;
+            tiles[i].textureId = 2;
         }
     }
 
