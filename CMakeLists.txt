@@ -13,7 +13,6 @@ include_directories("lib/glm")
 include_directories("C:/VulkanSDK/1.2.162.1/Include")
 
 add_compile_definitions(DEPTHS_DEBUG)
-add_compile_definitions(DIAMOND_DEBUG)
 
 #build shaders as well
 add_custom_command(

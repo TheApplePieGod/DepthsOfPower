@@ -11,6 +11,9 @@ int main(int argc, char** argv)
     while (Engine->IsRunning())
     {
         Engine->BeginFrame();
+        Engine->HandleInput();
+
+        Engine->RenderTestScene();
 
         Engine->EndFrame();
     }
