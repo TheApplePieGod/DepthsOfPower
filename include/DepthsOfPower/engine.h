@@ -4,8 +4,10 @@
 #include <DepthsOfPower/input.h>
 #include <DepthsOfPower/tilemap.h>
 #include <DepthsOfPower/util/basic.h>
+#include <DepthsOfPower/util/box2d_util.h>
 #include <chrono>
 #include <array>
+#include <Box2D/b2_world.h>
 
 class engine
 {
@@ -13,6 +15,7 @@ public:
     void Initialize();
     void BeginFrame();
     void HandleInput();
+    void TickPhysics();
     void RenderTestScene();
     void EndFrame();
     void Cleanup();
@@ -21,6 +24,7 @@ public:
     inline diamond& GetRenderer() { return renderer; };
     inline input_manager& GetInputManager() { return inputManager; }
     inline camera& GetCamera() { return mainCamera; };
+    inline b2World* GetPhysicsWorld() { return physicsWorld; };
 
 private:
     diamond renderer;
@@ -34,6 +38,12 @@ private:
     double deltaTime = 0.f; // ms
     std::array<double, 11> deltaTimes;
     int frameCount = 0;
+
+    // box2D
+    b2World* physicsWorld = nullptr;
+    box2d_debug_draw b2dDebugInstance;
+    double dtAccumulator = 0.0;
+    double physicsStep = 1.0 / 30.0;
 
     std::chrono::steady_clock::time_point frameStart;
 

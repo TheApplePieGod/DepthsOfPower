@@ -13,6 +13,7 @@ int main(int argc, char** argv)
         Engine->BeginFrame();
         Engine->HandleInput();
 
+        Engine->TickPhysics();
         Engine->RenderTestScene();
 
         Engine->EndFrame();

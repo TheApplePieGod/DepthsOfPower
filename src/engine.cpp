@@ -2,21 +2,34 @@
 #include <iostream>
 #include <thread>
 #include <algorithm>
+#include <DepthsOfPower/generation.h>
 
 void engine::Initialize()
 {
     renderer.Initialize(800, 600, "Depths of Power", "../shaders/main.vert.spv", "../shaders/main.frag.spv");
     inputManager.Initialize();
 
+    // init box2d
+    b2Vec2 gravity(0.f, -MetersToPixels(1.f));
+    physicsWorld = new b2World(gravity);
+    physicsWorld->SetDebugDraw(&b2dDebugInstance);
+    b2dDebugInstance.SetFlags(b2Draw::e_shapeBit);
+
     // initialize tilemap and position camera at the center of it
-    int mapSizeX = 201;
-    int mapSizeY = 100;
+    int mapSizeX = 200;
+    int mapSizeY = 500;
     f32 tileSizeMeters = 1.f;
     map = tilemap(mapSizeX, mapSizeY, tileSizeMeters);
-    mainCamera.SetPosition({ MetersToPixels(tileSizeMeters) * mapSizeX * 0.5f, MetersToPixels(tileSizeMeters) * mapSizeY * 0.5f });
+    world_generator generator;
+    generator.Generate(map, true);
+    mainCamera.SetPosition({ MetersToPixels(tileSizeMeters) * mapSizeX * 0.5f, MetersToPixels(tileSizeMeters) * mapSizeY - MetersToPixels(100.f) });
 
-    renderer.RegisterTexture("../images/test.png");
-    renderer.RegisterTexture("../images/dirt.png");
+    renderer.RegisterTexture("../images/dirt_map.png");
+    renderer.RegisterTexture("../images/stone_map.png");
+    renderer.RegisterTexture("../images/cold_stone_map.png");
+    renderer.RegisterTexture("../images/hot_stone_map.png");
+    renderer.RegisterTexture("../images/limestone_map.png");
+    renderer.RegisterTexture("../images/granite_map.png");
     renderer.SyncTextureUpdates();
 }
 
@@ -37,7 +50,7 @@ void engine::HandleInput()
     if (inputManager.WasKeyJustPressed("F2"))
         renderer.SetFullscreen(false);
 
-    f32 movementSpeed = (deltaTime / 1000.f) * MetersToPixels(5.f);
+    f32 movementSpeed = (deltaTime / 1000.f) * MetersToPixels(20.f);
     if (inputManager.IsKeyPressed("a"))
         mainCamera.Move({ -movementSpeed, 0.f });
     if (inputManager.IsKeyPressed("d"))
@@ -47,7 +60,7 @@ void engine::HandleInput()
     if (inputManager.IsKeyPressed("s"))
         mainCamera.Move({ 0.f, -movementSpeed * 1.2f });
 
-    if (inputManager.WasMouseJustPressed(1)) // lmb
+    if (inputManager.IsMouseDown(1)) // lmb
     {
         glm::vec2 mouseWorldPos = inputManager.GetMouseWorldPosition();
         u64 tileIndex = map.GetTileAtLocation(mouseWorldPos);
@@ -55,6 +68,18 @@ void engine::HandleInput()
         {
             tile newTile;
             newTile.textureId = 0;
+            map.UpdateTile(tileIndex, newTile);
+        }
+    }
+
+    if (inputManager.IsMouseDown(2)) // rmb
+    {
+        glm::vec2 mouseWorldPos = inputManager.GetMouseWorldPosition();
+        u64 tileIndex = map.GetTileAtLocation(mouseWorldPos);
+        if (tileIndex != -1)
+        {
+            tile newTile;
+            newTile.textureId = 2;
             map.UpdateTile(tileIndex, newTile);
         }
     }
@@ -68,13 +93,27 @@ void engine::RenderTestScene()
     
     map.Draw(mainCamera.GetPosition());
     renderer.DrawQuad(0, transform, { 0.f, 0.f, 0.f, 1.f });
+    physicsWorld->DebugDraw();
+}
+
+void engine::TickPhysics()
+{
+    dtAccumulator += deltaTime;
+
+    while (dtAccumulator >= physicsStep)
+    {
+        physicsWorld->Step(physicsStep, 6, 2);
+        dtAccumulator -= physicsStep;
+    }
+
+    map.UpdateColliders(mainCamera.GetPosition());
 }
 
 void engine::EndFrame()
 {
     inputManager.ClearJustPressedFlags();
 
-    glm::vec4 clearColor = { 0.f, 0.f, 0.f, 1.f };
+    glm::vec4 clearColor = { 0.009, 0.009, 0.009, 1.f };
     renderer.EndFrame(clearColor);
 
     //std::this_thread::sleep_for(std::chrono::milliseconds(50));
