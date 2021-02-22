@@ -2,8 +2,6 @@
 #include <DepthsOfPower/util/basic.h>
 #include <vector>
 #include <vec2.hpp>
-#include <Box2D/b2_body.h>
-#include <DepthsOfPower/util/basic.h>
 
 struct tile
 {
@@ -37,7 +35,7 @@ public:
     tilemap(u32 mapWidth, u32 mapHeight, f32 tileSizeMeters);
 
     void Draw(glm::vec2 cameraPos);
-    void UpdateColliders(glm::vec2 cameraPos);
+    bool IsColliding(glm::vec2 colliderPos, glm::vec2 colliderExtent);
     void UpdateTile(u64 tileIndex, tile newData);
     void DebugSaveMapToFile();
 
@@ -55,6 +53,5 @@ private:
     u32 width = 0;
     u32 height = 0;
     f32 tileSize = 0.f; // meters
-    std::vector<b2Body*> bodyPool;
 
 };

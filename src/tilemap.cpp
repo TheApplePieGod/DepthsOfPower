@@ -3,8 +3,6 @@
 #include <iostream>
 #include <map>
 #include <vec3.hpp>
-#include <Box2D/b2_polygon_shape.h>
-#include <Box2D/b2_fixture.h>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write.h>
@@ -17,73 +15,43 @@ tilemap::tilemap(u32 mapWidth, u32 mapHeight, f32 tileSizeMeters)
     height = mapHeight;
     tileSize = tileSizeMeters;
     tiles.resize(width * height);
-    
-    if (Engine)
-    {
-        for (int i = 0; i < 20; i++)
-        {
-            b2BodyDef tileBodyDef;
-            tileBodyDef.position.Set(0.f, 0.f);
-
-            b2Body* body = Engine->GetPhysicsWorld()->CreateBody(&tileBodyDef);
-
-            b2PolygonShape box;
-            box.SetAsBox(MetersToPixels(tileSizeMeters * 0.5f), MetersToPixels(tileSizeMeters * 0.5f));
-            
-            b2FixtureDef fixtureDef;
-            fixtureDef.shape = &box;
-            fixtureDef.friction = 0.0f;
-
-            body->CreateFixture(&fixtureDef);
-            body->SetAwake(true);
-
-            bodyPool.push_back(body);
-        }
-    }
 }
 
-void tilemap::UpdateColliders(glm::vec2 cameraPos)
+bool tilemap::IsColliding(glm::vec2 colliderPos, glm::vec2 colliderExtent)
 {
-    int drawRangeX = 2;
-    int drawRangeY = 2;
-    u64 topLeftTile = GetTopLeftTileOfRange(cameraPos, { drawRangeX, drawRangeY });
+    u64 topLeftTile = GetTileAtLocation({ colliderPos.x - colliderExtent.x, colliderPos.y + colliderExtent.y });
+    u64 topRightTile = GetTileAtLocation({ colliderPos.x + colliderExtent.x, colliderPos.y + colliderExtent.y });
+    u64 bottomLeftTile = GetTileAtLocation({ colliderPos.x - colliderExtent.x, colliderPos.y - colliderExtent.y });
 
-    f32 scaleX = MetersToPixels(tileSize);
-    f32 scaleY = MetersToPixels(tileSize);
+    if (topLeftTile < 0)
+        topLeftTile = 0;
+    if (topRightTile < 0)
+        topRightTile = 0;
+    if (bottomLeftTile < 0)
+        bottomLeftTile = 0;
 
-    u64 bodyIndex = 0;
-    for (u32 y = 0; y < drawRangeY * 2 + 1; y++)
+    u64 xRange = topRightTile - topLeftTile + 1;
+    u64 yRange = ((topLeftTile - bottomLeftTile) / width) + 1;
+    bool collision = false;
+    for (int y = 0; y < yRange; y++)
     {
-        for (u32 x = 0; x < drawRangeX * 2 + 1; x++)
+        for (int x = 0; x < xRange; x++)
         {
-            if (bodyIndex < bodyPool.size())
+            u64 tileIndex = topLeftTile + x - (y * width);
+            if (tileIndex >= tiles.size())
+                tileIndex = tiles.size() - 1;
+
+            if (tiles[tileIndex].textureId != 0) // has collision
             {
-                u64 tileIndex = topLeftTile + x - (y * width);
-                if (tileIndex >= tiles.size())
-                    tileIndex = tiles.size() - 1;
-
-                if (tiles[tileIndex].textureId != 0)
-                {
-                    u32 tileX = tileIndex % width;
-                    u32 tileY = tileIndex / width;
-
-                    b2Vec2 pos(tileX * scaleX, tileY * scaleY);
-
-                    bodyPool[bodyIndex]->SetAwake(true);
-                    bodyPool[bodyIndex]->SetTransform(pos, 0.f);
-
-                    bodyIndex++;
-                }
+                collision = true;
+                break;
             }
         }
+        if (collision)
+            break;
     }
 
-    // disable rest of unused bodies
-    for (bodyIndex; bodyIndex < bodyPool.size(); bodyIndex++)
-    {
-        //bodyPool[i]->SetAwake(false);
-        bodyPool[bodyIndex]->SetTransform(b2Vec2(-20000, 0), 0.f);
-    }
+    return collision;
 }
 
 u64 tilemap::GetTopLeftTileOfRange(glm::vec2 center, glm::vec2 range)

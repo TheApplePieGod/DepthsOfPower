@@ -1,13 +1,12 @@
 #pragma once
 #include <DepthsOfPower/util/basic.h>
-#include <Box2D/b2_body.h>
 #include <vec2.hpp>
 #include <optional>
 
 struct entity;
 struct physics_component
 {
-    b2Body* body;
+    glm::vec2 extent;
 
     static void Tick(entity& entity);
 };
