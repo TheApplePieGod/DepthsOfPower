@@ -14,6 +14,7 @@ int main(int argc, char** argv)
         Engine->HandleInput();
 
         Engine->TickPhysics();
+        Engine->TickComponents();
         Engine->RenderTestScene();
 
         Engine->EndFrame();

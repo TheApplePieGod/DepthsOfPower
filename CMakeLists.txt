@@ -26,19 +26,30 @@ add_custom_command(
 
 file(GLOB SOURCES "src/*.cpp")
 file(GLOB UTILS "src/util/*.cpp")
-file(GLOB COMPONENTS "src/components/*.cpp")
 # add_executable(Diamond src/testing/main.cpp)
-add_executable(DepthsOfPower ${SOURCES} ${UTILS} ${COMPONENTS} "src/entry/main.cpp" CompileShaders)
+add_executable(DepthsOfPower ${SOURCES} ${UTILS} "src/entry/main.cpp" CompileShaders)
 
-find_library(Diamond Diamond "lib/Diamond")
 find_library(glfw3 glfw3 "lib/glfw-3.3.2.bin.WIN64/lib-vc2019")
 find_library(vulkan-1 vulkan-1 "C:/VulkanSDK/1.2.162.1/Lib")
+
+# debug
+find_library(Diamond Diamond "lib/Diamond")
 find_library(FastNoiseD FastNoiseD "lib/FastNoise2")
 find_library(box2d box2d "lib/Box2D")
-target_link_libraries(DepthsOfPower "${glfw3}")
-target_link_libraries(DepthsOfPower "${vulkan-1}")
 target_link_libraries(DepthsOfPower "${Diamond}")
 target_link_libraries(DepthsOfPower "${FastNoiseD}")
 target_link_libraries(DepthsOfPower "${box2d}")
+
+#release
+# find_library(Diamond-release Diamond-release "lib/Diamond")
+# find_library(FastNoise FastNoise "lib/FastNoise2")
+# find_library(box2d-release box2d-release "lib/Box2D")
+# target_link_libraries(DepthsOfPower "${Diamond-release}")
+# target_link_libraries(DepthsOfPower "${FastNoise}")
+# target_link_libraries(DepthsOfPower "${box2d-release}")
+
+target_link_libraries(DepthsOfPower "${glfw3}")
+target_link_libraries(DepthsOfPower "${vulkan-1}")
+
 # # Tell C++ compiler to use C++20 features.
 target_compile_features(DepthsOfPower PUBLIC cxx_std_20)

@@ -3,6 +3,7 @@
 #include <vector>
 #include <vec2.hpp>
 #include <Box2D/b2_body.h>
+#include <DepthsOfPower/util/basic.h>
 
 struct tile
 {
