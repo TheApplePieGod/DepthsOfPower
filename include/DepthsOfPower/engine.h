@@ -25,6 +25,7 @@ public:
     inline diamond& GetRenderer() { return renderer; };
     inline input_manager& GetInputManager() { return inputManager; }
     inline camera& GetCamera() { return mainCamera; };
+    inline entity& GetEntity(int id) { return entityList[id]; };
 
 private:
     diamond renderer;

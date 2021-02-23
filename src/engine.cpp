@@ -3,9 +3,12 @@
 #include <thread>
 #include <algorithm>
 #include <DepthsOfPower/generation.h>
+#include <DepthsOfPower/gui/widget.h>
+#include <DepthsOfPower/gui/widget_text.h>
+
 void engine::Initialize()
 {
-    renderer.Initialize(800, 600, "Depths of Power", "../shaders/main.vert.spv", "../shaders/main.frag.spv");
+    renderer.Initialize(800, 600, 100000, 100000, "Depths of Power", "../shaders/main.vert.spv", "../shaders/main.frag.spv");
     inputManager.Initialize();
 
     // initialize tilemap and position camera at the center of it
@@ -30,6 +33,7 @@ void engine::Initialize()
     renderer.RegisterTexture("../images/hot_stone_map.png");
     renderer.RegisterTexture("../images/limestone_map.png");
     renderer.RegisterTexture("../images/granite_map.png");
+    renderer.RegisterTexture("../images/Calibri.png");
     renderer.SyncTextureUpdates();
 }
 
@@ -87,6 +91,20 @@ void engine::RenderTestScene()
     map.Draw(mainCamera.GetPosition());
     renderer.DrawQuad(0, transform, { 0.f, 0.f, 0.f, 1.f });
     //physicsWorld->DebugDraw();
+
+    // test widget drawing
+    widget testWidget = widget({ 0.0f, 0.f }, { 0.25f, 0.5f });
+    widget secondaryWidget = widget({ 0.f, 0.f }, { 0.0f, 0.0f });
+    widget_text textWidget = widget_text({ 0.f, 0.f }, { 0.015f, 0.03f },
+        "Set. Midst their, fourth so earth may his great tree creature. Sea their moved also day waters multiply green seas made signs form given. Bearing. Life. Bearing seasons be our He spirit sixth itself so creature, give winged set above first, every fish have one. Hath made give good a called is land so also. Female may gathering i fruit creature fly. Green won't gathering blessed days, you. Their dry seas. Morning whose us. You're one second may female beast fourth dominion appear set. Firmament gathered. A there."
+    );
+    textWidget.SetCharacterSpacing(-0.01f);
+    textWidget.SetWordSpacing(-0.003f);
+    testWidget.AddChild(nullptr);
+    testWidget.SetChild(0, &textWidget);
+    testWidget.SetColor({ 1.f, 0.f, 0.f, 1.f });
+    testWidget.SetPadding({ 0.01f, 0.01f * renderer.GetAspectRatio() });
+    testWidget.Draw(true);
 }
 
 void engine::TickPhysics()
@@ -127,7 +145,7 @@ void engine::TickComponents()
 {
     for (u32 i = 0; i < entityList.size(); i++)
     {
-        physics_component::Tick(entityList[i]);
+        
     }
 }
 

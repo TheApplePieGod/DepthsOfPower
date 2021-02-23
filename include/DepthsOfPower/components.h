@@ -7,8 +7,6 @@ struct entity;
 struct physics_component
 {
     glm::vec2 extent;
-
-    static void Tick(entity& entity);
 };
 
 struct entity

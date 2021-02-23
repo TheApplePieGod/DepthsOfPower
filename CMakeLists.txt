@@ -25,8 +25,9 @@ add_custom_command(
 
 file(GLOB SOURCES "src/*.cpp")
 file(GLOB UTILS "src/util/*.cpp")
+file(GLOB GUI "src/gui/*.cpp")
 # add_executable(Diamond src/testing/main.cpp)
-add_executable(DepthsOfPower ${SOURCES} ${UTILS} "src/entry/main.cpp" CompileShaders)
+add_executable(DepthsOfPower ${SOURCES} ${UTILS} ${GUI} "src/entry/main.cpp" CompileShaders)
 
 find_library(glfw3 glfw3 "lib/glfw-3.3.2.bin.WIN64/lib-vc2019")
 find_library(vulkan-1 vulkan-1 "C:/VulkanSDK/1.2.162.1/Lib")
