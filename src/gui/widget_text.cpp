@@ -12,7 +12,7 @@ widget_text::widget_text(glm::vec2 pos, glm::vec2 _fontSize, const char* text) :
     SetText(text);
 }
 
-void widget_text::Draw(bool isParent, glm::vec2 currentOffset, glm::vec2 parentBounds)
+glm::vec2 widget_text::Draw(bool isParent, glm::vec2 currentOffset, glm::vec2 parentBounds)
 {
     if (words.size() > 0)
     {
@@ -75,7 +75,8 @@ void widget_text::Draw(bool isParent, glm::vec2 currentOffset, glm::vec2 parentB
 
                 offsetScales[charIndex] = offsetScale;
                 texCoords[charIndex] = texCoord;
-                textureIndexes[charIndex] = 7;
+                textureIndexes[charIndex] = textureId;
+                colors[charIndex] = color;
                 charIndex++;
             }
 
@@ -87,8 +88,15 @@ void widget_text::Draw(bool isParent, glm::vec2 currentOffset, glm::vec2 parentB
         parentTransform.location = { currentOffset.x * MetersToPixels(ScreenMetersX) + cameraPos.x, -currentOffset.y * MetersToPixels(ScreenMetersX) / Engine->GetRenderer().GetAspectRatio() + cameraPos.y }; // transform location
         parentTransform.location += glm::vec2(-MetersToPixels(ScreenMetersX) * 0.5f, MetersToPixels(ScreenMetersX) * 0.5f / Engine->GetRenderer().GetAspectRatio()); // offset location
 
-        Engine->GetRenderer().DrawQuadsOffsetScale(textureIndexes.data(), offsetScales.data(), characterCount, parentTransform, nullptr, texCoords.data());
+        Engine->GetRenderer().DrawQuadsOffsetScale(textureIndexes.data(), offsetScales.data(), characterCount, parentTransform, colors.data(), texCoords.data());
+
+        if (newLineWordIndexes.size() == 0)
+            return { characterCount * (fontSize.x + characterSpacing) - characterSpacing, fontSize.y };
+        else
+            return { parentBounds.x, fontSize.y * newLineWordIndexes.size() };
     }
+
+    return { 0.f, 0.f };
 }
 
 void widget_text::SetText(const char* newText)
@@ -117,9 +125,11 @@ void widget_text::SetText(const char* newText)
     offsetScales.clear();
     textureIndexes.clear();
     texCoords.clear();
+    colors.clear();
     textureIndexes.resize(characterCount);
     offsetScales.resize(characterCount);
     texCoords.resize(characterCount);
+    colors.resize(characterCount);
 }
 
 const char* widget_text::GetText()

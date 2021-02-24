@@ -1,7 +1,8 @@
 #pragma once
 #include <vec2.hpp>
 #include <vec4.hpp>
-#include <vector>
+#include <map>
+#include <string>
 #include <DepthsOfPower/util/basic.h>
 
 // a widget is the base gui element and can act as both a parent and a child
@@ -17,11 +18,12 @@ public:
     inline void SetTextureId(int newId) { textureId = newId; }; 
     inline void SetTransparency(float newValue) { color.a = newValue; };
 
-    virtual void Draw(bool isParent, glm::vec2 currentOffset = { 0.f, 0.f }, glm::vec2 parentBounds = { 0.f, 0.f }); // passed down by parent, new draw origin of this element
+    // passed down by parent, new draw origin of this element
+    // returns final size of child
+    virtual glm::vec2 Draw(bool isParent, glm::vec2 currentOffset = { 0.f, 0.f }, glm::vec2 parentBounds = { 0.f, 0.f });
 
-    u32 AddChild(widget* child);
-    void RemoveChild(u32 index);
-    inline void SetChild(u32 index, widget* child) { children[index] = child; };
+    void AddChild(const char* name, widget* child);
+    void RemoveChild(const char* name, bool deletePointer);
 
     inline glm::vec2 GetPosition() { return position; };
     inline glm::vec2 GetSize() { return size; };
@@ -29,11 +31,18 @@ public:
     inline glm::vec4 GetColor() { return color; };
     inline int GetTextureId() { return textureId; };
 
+    template<typename T>
+    T* GetChild(const char* name)
+    {
+        static_assert(std::is_base_of<widget, T>::value);
+        return (T*)children[name];
+    }
+
 protected:
     glm::vec2 position = { 0.f, 0.f }; // position of the top left corner in screen space ([0,0] is top left and [1,1] is bottom right) (position is treated as an offset when this element is a child)
     glm::vec2 size = { 0.2f, 0.2f, }; // size of the widget extending out of the origin (top left corner) (if size is zero and widget is child, it will fill to bounds)
     glm::vec2 padding = { 0.f, 0.f }; // space between the edges of parent element and child elements
-    glm::vec4 color = { 0.f, 0.f, 0.f, 1.f };
+    glm::vec4 color = { 1.f, 1.f, 1.f, 1.f };
     int textureId = -1;
-    std::vector<widget*> children;
+    std::map<std::string, widget*> children;
 };

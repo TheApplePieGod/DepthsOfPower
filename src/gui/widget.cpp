@@ -19,10 +19,9 @@ void widget::SetSize(glm::vec2 newSize)
     size = newSize;
 }
 
-void widget::Draw(bool isParent, glm::vec2 currentOffset, glm::vec2 parentBounds)
+glm::vec2 widget::Draw(bool isParent, glm::vec2 currentOffset, glm::vec2 parentBounds)
 {
     diamond_transform transform;
-    glm::vec2 drawOffset;
     glm::vec2 finalSize;
 
     if (isParent)
@@ -61,19 +60,23 @@ void widget::Draw(bool isParent, glm::vec2 currentOffset, glm::vec2 parentBounds
     transform.scale = { transform.scale.x * MetersToPixels(ScreenMetersX), transform.scale.y * MetersToPixels(ScreenMetersX) / Engine->GetRenderer().GetAspectRatio() };
 
     Engine->GetRenderer().DrawQuad(textureId, transform, color);
-    for (auto& child : children)
+    glm::vec2 drawOffset = { 0.f, 0.f };
+    for (const auto& p : children)
     {
-        child->Draw(false, position + padding, size - padding * 2.f);
+        drawOffset.y += children[p.first]->Draw(false, position + padding + drawOffset, size - (padding + drawOffset) * 2.f).y;
     }
+
+    return finalSize;
 }
 
-u32 widget::AddChild(widget* child)
+void widget::AddChild(const char* name, widget* child)
 {
-    children.push_back(child);
-    return children.size() - 1;
+    children[name] = child;
 }
 
-void widget::RemoveChild(u32 index)
+void widget::RemoveChild(const char* name, bool deletePointer)
 {
-    children.erase(children.begin(), children.begin() + index);
+    if (deletePointer)
+        delete children[name];
+    children[name] = nullptr;
 }

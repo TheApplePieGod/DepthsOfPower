@@ -27,6 +27,28 @@ void engine::Initialize()
     player.physicsComponent = physicsComp;
     entityList.push_back(player); // entity 0 should be the main player
 
+    // create widgets
+    widget* testWidget = new widget({ 0.0f, 0.f }, { 0.25f, 0.5f });
+    widget* secondaryWidget = new widget({ 0.f, 0.f }, { 0.0f, 0.0f });
+
+    widget_text* textDelta = new widget_text({ 0.f, 0.f }, { 0.015f, 0.03f }, "");
+    textDelta->SetCharacterSpacing(-0.01f);
+    textDelta->SetWordSpacing(-0.003f);
+    textDelta->SetTextureId(7);
+
+    widget_text* textPosition = new widget_text({ 0.f, 0.f }, { 0.015f, 0.03f }, "");
+    textPosition->SetCharacterSpacing(-0.01f);
+    textPosition->SetWordSpacing(-0.003f);
+    textPosition->SetTextureId(7);
+
+    testWidget->AddChild("text_delta", textDelta);
+    testWidget->AddChild("text_pos", textPosition);
+    testWidget->SetTextureId(8);
+
+    testWidget->SetColor({ 1.f, 0.f, 0.f, 1.f });
+    testWidget->SetPadding({ 0.01f, 0.01f * renderer.GetAspectRatio() });
+    widgetManager.AddWidget("test_widget", testWidget);
+
     renderer.RegisterTexture("../images/dirt_map.png");
     renderer.RegisterTexture("../images/stone_map.png");
     renderer.RegisterTexture("../images/cold_stone_map.png");
@@ -34,6 +56,7 @@ void engine::Initialize()
     renderer.RegisterTexture("../images/limestone_map.png");
     renderer.RegisterTexture("../images/granite_map.png");
     renderer.RegisterTexture("../images/Calibri.png");
+    renderer.RegisterTexture("../images/rounded_rectangle.png");
     renderer.SyncTextureUpdates();
 }
 
@@ -90,21 +113,7 @@ void engine::RenderTestScene()
     
     map.Draw(mainCamera.GetPosition());
     renderer.DrawQuad(0, transform, { 0.f, 0.f, 0.f, 1.f });
-    //physicsWorld->DebugDraw();
-
-    // test widget drawing
-    widget testWidget = widget({ 0.0f, 0.f }, { 0.25f, 0.5f });
-    widget secondaryWidget = widget({ 0.f, 0.f }, { 0.0f, 0.0f });
-    widget_text textWidget = widget_text({ 0.f, 0.f }, { 0.015f, 0.03f },
-        "Set. Midst their, fourth so earth may his great tree creature. Sea their moved also day waters multiply green seas made signs form given. Bearing. Life. Bearing seasons be our He spirit sixth itself so creature, give winged set above first, every fish have one. Hath made give good a called is land so also. Female may gathering i fruit creature fly. Green won't gathering blessed days, you. Their dry seas. Morning whose us. You're one second may female beast fourth dominion appear set. Firmament gathered. A there."
-    );
-    textWidget.SetCharacterSpacing(-0.01f);
-    textWidget.SetWordSpacing(-0.003f);
-    testWidget.AddChild(nullptr);
-    testWidget.SetChild(0, &textWidget);
-    testWidget.SetColor({ 1.f, 0.f, 0.f, 1.f });
-    testWidget.SetPadding({ 0.01f, 0.01f * renderer.GetAspectRatio() });
-    testWidget.Draw(true);
+    widgetManager.DrawAllWidgets();
 }
 
 void engine::TickPhysics()
@@ -179,7 +188,13 @@ void engine::EndFrame()
         frameCount = 0;
     }
 
-    //f32 fps = 1.f / (deltaTime / 1000.f);
+    // update widget information
+    std::string tempText = "Delta: " + std::to_string(deltaTime);
+    widgetManager.GetWidget<widget>("test_widget")->GetChild<widget_text>("text_delta")->SetText(tempText.c_str());
+
+    tempText = "Pos: (" + std::to_string((int)entityList[0].position.x) + ", " + std::to_string((int)entityList[0].position.y) + ")";
+    widgetManager.GetWidget<widget>("test_widget")->GetChild<widget_text>("text_pos")->SetText(tempText.c_str());
+
     //std::cout << "dt: " << deltaTime << std::endl;
 }
 

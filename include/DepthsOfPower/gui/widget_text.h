@@ -1,6 +1,6 @@
 #pragma once
 #include <DepthsOfPower/gui/widget.h>
-#include <string>
+#include <vector>
 
 // this widget will not render children
 class widget_text: public widget
@@ -8,7 +8,7 @@ class widget_text: public widget
 public:
     widget_text(glm::vec2 pos, glm::vec2 fontSize, const char* text);
 
-    void Draw(bool isParent, glm::vec2 currentOffset = { 0.f, 0.f }, glm::vec2 parentBounds = { 0.f, 0.f }) override; // todo: propogate resize down to simplify draw calculations
+    glm::vec2 Draw(bool isParent, glm::vec2 currentOffset = { 0.f, 0.f }, glm::vec2 parentBounds = { 0.f, 0.f }) override; // todo: propogate resize down to simplify draw calculations
 
     void SetText(const char* newText);
     inline void SetFontSize(glm::vec2 newSize) { fontSize = newSize; };
@@ -28,6 +28,7 @@ private:
     std::vector<std::string> words;
     std::vector<glm::vec4> offsetScales;
     std::vector<glm::vec4> texCoords;
+    std::vector<glm::vec4> colors;
     std::vector<int> textureIndexes;
 
     int characterCount;

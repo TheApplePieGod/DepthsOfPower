@@ -5,6 +5,7 @@
 #include <DepthsOfPower/tilemap.h>
 #include <DepthsOfPower/util/basic.h>
 #include <DepthsOfPower/components.h>
+#include <DepthsOfPower/gui/widget_manager.h>
 #include <chrono>
 #include <array>
 #include <vector>
@@ -31,6 +32,7 @@ private:
     diamond renderer;
     camera mainCamera;
     input_manager inputManager;
+    widget_manager widgetManager;
     tilemap map = tilemap(1, 1, 1.f);
     std::vector<entity> entityList;
 
