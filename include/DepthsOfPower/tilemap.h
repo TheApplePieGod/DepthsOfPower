@@ -45,7 +45,9 @@ public:
 
     // assumes bottom left of tilemap is centered at 0,0
     u64 GetTileAtLocation(glm::vec2 location);
+    glm::vec2 GetWorldLocationOfTile(u64 tileIndex);
     u64 GetTopLeftTileOfRange(glm::vec2 center, glm::vec2 range);
+    u64 RayTraceForTile(glm::vec2 startPos, glm::vec2 direction, int max); // set max to 0 for as far as possible, direction should be normalized (+y is up)
     tile_connection GetTileConnection(u64 tileIndex);
 
 private:

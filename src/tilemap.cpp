@@ -178,6 +178,13 @@ void tilemap::UpdateTile(u64 tileIndex, tile newData)
     tiles[tileIndex] = newData;
 }
 
+glm::vec2 tilemap::GetWorldLocationOfTile(u64 tileIndex)
+{
+    u32 tileX = tileIndex % width;
+    u32 tileY = tileIndex / width;
+    return { tileX * MetersToPixels(tileSize), tileY * MetersToPixels(tileSize) };
+}
+
 u64 tilemap::GetTileAtLocation(glm::vec2 location)
 {
     u64 TileX = (u64)round((location.x) / MetersToPixels(tileSize));
@@ -186,6 +193,30 @@ u64 tilemap::GetTileAtLocation(glm::vec2 location)
         FinalTile = 0;
 
     return FinalTile;
+}
+
+u64 tilemap::RayTraceForTile(glm::vec2 startPos, glm::vec2 direction, int max)
+{
+    int count = 0;
+    u64 currentTile = GetTileAtLocation(startPos);
+    while ((max == 0 || count < max) && currentTile >= 0 && currentTile < tiles.size())
+    {
+        if (tiles[currentTile].textureId != 0)
+            break; 
+
+        u32 tileX = currentTile % width;
+        u32 tileY = currentTile / width;
+        if (tileX + (int)direction.x >= width || tileX + (int)direction.x < 0)
+            break;
+        if (tileY + (int)direction.y >= tiles.size() || tileY + (int)direction.y < 0)
+            break;
+
+        currentTile += (int)direction.x;
+        currentTile = (signed)(currentTile + width * (int)direction.y);
+
+        count++;
+    }
+    return currentTile;
 }
 
 tile_connection tilemap::GetTileConnection(u64 tileIndex)

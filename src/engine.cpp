@@ -13,7 +13,7 @@ void engine::Initialize()
 
     // initialize tilemap and position camera at the center of it
     int mapSizeX = 200;
-    int mapSizeY = 500;
+    int mapSizeY = 1000;
     f32 tileSizeMeters = 1.f;
     map = tilemap(mapSizeX, mapSizeY, tileSizeMeters);
     world_generator generator;
@@ -22,7 +22,8 @@ void engine::Initialize()
     // init player entity
     physics_component physicsComp;
     entity player;
-    player.position = { MetersToPixels(tileSizeMeters) * mapSizeX * 0.5f, MetersToPixels(tileSizeMeters) * mapSizeY - MetersToPixels(99.f) };
+    player.position = { MetersToPixels(tileSizeMeters) * mapSizeX * 0.5f, MetersToPixels(tileSizeMeters) * mapSizeY * 0.95f };
+    player.position.y = map.GetWorldLocationOfTile(map.RayTraceForTile(player.position, { 0.f, -1.f }, 0)).y + MetersToPixels(3.f);
     physicsComp.extent = { MetersToPixels(0.4f), MetersToPixels(0.9f) };
     player.physicsComponent = physicsComp;
     entityList.push_back(player); // entity 0 should be the main player
@@ -139,7 +140,7 @@ void engine::TickPhysics()
         // y movement
         finalMovement = 0.f;
         if (inputManager.IsKeyPressed("w"))
-            finalMovement += movementSpeed * 1.2f;
+            finalMovement += movementSpeed * 2.f;
         if (inputManager.IsKeyPressed("s"))
             finalMovement -= movementSpeed * 1.2f;
         finalMovement -= gravity;
