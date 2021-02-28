@@ -37,7 +37,7 @@ public:
     void Draw(glm::vec2 cameraPos);
     bool IsColliding(glm::vec2 colliderPos, glm::vec2 colliderExtent);
     void UpdateTile(u64 tileIndex, tile newData);
-    void DebugSaveMapToFile();
+    void DebugSaveMapToFile(bool transparent);
 
     inline u32 GetWidth() { return width; };
     inline u32 GetHeight() { return height; };

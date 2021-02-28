@@ -137,10 +137,22 @@ void tilemap::Draw(glm::vec2 cameraPos)
     Engine->GetRenderer().DrawIndexed(static_cast<u32>(indices.size()), static_cast<u32>(vertices.size()), -1, baseTransform);
 }
 
-void tilemap::DebugSaveMapToFile()
+void tilemap::DebugSaveMapToFile(bool transparent)
 {
     unsigned char* pixelData = new unsigned char[width * height * 4];
     std::map<int, glm::vec3> colorMap;
+
+    // manual color overrides
+    colorMap[Engine->GetTextureManager().GetTextureId("dirt")] = { 138, 84, 52 };
+    colorMap[Engine->GetTextureManager().GetTextureId("stone")] = { 100, 100, 100 };
+    colorMap[Engine->GetTextureManager().GetTextureId("hot_stone")] = { 109, 90, 90 };
+    colorMap[Engine->GetTextureManager().GetTextureId("cold_stone")] = { 90, 90, 109 };
+    colorMap[Engine->GetTextureManager().GetTextureId("limestone")] = { 184, 173, 53 };
+    colorMap[Engine->GetTextureManager().GetTextureId("marble")] = { 157, 175, 175 };
+    colorMap[Engine->GetTextureManager().GetTextureId("granite")] = { 20, 60, 60 };
+    colorMap[Engine->GetTextureManager().GetTextureId("basalt")] = { 20, 20, 20 };
+    colorMap[Engine->GetTextureManager().GetTextureId("iron_ore")] = { 150, 135, 120 };
+    colorMap[Engine->GetTextureManager().GetTextureId("copper_ore")] = { 194, 119, 48 };
 
     u64 pixelIndex = width * 4 * (height - 1);
     for (u64 i = 0; i < tiles.size(); i++)
@@ -162,7 +174,7 @@ void tilemap::DebugSaveMapToFile()
         pixelData[pixelIndex] = (int)color.x;
         pixelData[pixelIndex + 1] = (int)color.y;
         pixelData[pixelIndex + 2] = (int)color.z;
-        pixelData[pixelIndex + 3] = 255;
+        pixelData[pixelIndex + 3] = (tiles[i].textureId == 0 && transparent ? 0 : 255);
 
         pixelIndex += 4;
         if (pixelIndex % (width * 4) == 0)

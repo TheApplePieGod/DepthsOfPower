@@ -4,6 +4,7 @@
 #include <DepthsOfPower/input.h>
 #include <DepthsOfPower/tilemap.h>
 #include <DepthsOfPower/util/basic.h>
+#include <DepthsOfPower/util/texture_manager.h>
 #include <DepthsOfPower/components.h>
 #include <DepthsOfPower/gui/widget_manager.h>
 #include <chrono>
@@ -25,6 +26,7 @@ public:
     bool IsRunning();
     inline diamond& GetRenderer() { return renderer; };
     inline input_manager& GetInputManager() { return inputManager; }
+    inline texture_manager& GetTextureManager() { return textureManager; }
     inline camera& GetCamera() { return mainCamera; };
     inline entity& GetEntity(int id) { return entityList[id]; };
 
@@ -33,6 +35,7 @@ private:
     camera mainCamera;
     input_manager inputManager;
     widget_manager widgetManager;
+    texture_manager textureManager;
     tilemap map = tilemap(1, 1, 1.f);
     std::vector<entity> entityList;
 

@@ -11,12 +11,29 @@ void engine::Initialize()
     renderer.Initialize(800, 600, 100000, 100000, "Depths of Power", "../shaders/main.vert.spv", "../shaders/main.frag.spv");
     inputManager.Initialize();
 
+    // initialize textures
+    textureManager.RegisterTexture(renderer, "dirt", "../images/tiles/maps/dirt_map.png");
+    textureManager.RegisterTexture(renderer, "stone", "../images/tiles/maps/stone_map.png");
+    textureManager.RegisterTexture(renderer, "cold_stone", "../images/tiles/maps/cold_stone_map.png");
+    textureManager.RegisterTexture(renderer, "hot_stone", "../images/tiles/maps/hot_stone_map.png");
+    textureManager.RegisterTexture(renderer, "limestone", "../images/tiles/maps/limestone_map.png");
+    textureManager.RegisterTexture(renderer, "granite", "../images/tiles/maps/granite_map.png");
+    textureManager.RegisterTexture(renderer, "marble", "../images/tiles/maps/marble_map.png");
+    textureManager.RegisterTexture(renderer, "basalt", "../images/tiles/maps/basalt_map.png");
+    textureManager.RegisterTexture(renderer, "iron_ore", "../images/tiles/maps/iron_ore_map.png");
+    textureManager.RegisterTexture(renderer, "copper_ore", "../images/tiles/maps/copper_ore_map.png");
+    
+    textureManager.RegisterTexture(renderer, "font_calibri", "../images/fonts/calibri.png");
+    textureManager.RegisterTexture(renderer, "rounded_rectangle", "../images/rounded_rectangle.png");
+    renderer.SyncTextureUpdates();
+
     // initialize tilemap and position camera at the center of it
     int mapSizeX = 200;
-    int mapSizeY = 1000;
+    int mapSizeY = 500;
     f32 tileSizeMeters = 1.f;
     map = tilemap(mapSizeX, mapSizeY, tileSizeMeters);
     world_generator generator;
+    generator.SetSeed(1337);
     generator.Generate(map, true);
 
     // init player entity
@@ -35,30 +52,20 @@ void engine::Initialize()
     widget_text* textDelta = new widget_text({ 0.f, 0.f }, { 0.015f, 0.03f }, "");
     textDelta->SetCharacterSpacing(-0.01f);
     textDelta->SetWordSpacing(-0.003f);
-    textDelta->SetTextureId(7);
+    textDelta->SetTextureId(textureManager.GetTextureId("font_calibri"));
 
     widget_text* textPosition = new widget_text({ 0.f, 0.f }, { 0.015f, 0.03f }, "");
     textPosition->SetCharacterSpacing(-0.01f);
     textPosition->SetWordSpacing(-0.003f);
-    textPosition->SetTextureId(7);
+    textPosition->SetTextureId(textureManager.GetTextureId("font_calibri"));
 
     testWidget->AddChild("text_delta", textDelta);
     testWidget->AddChild("text_pos", textPosition);
-    testWidget->SetTextureId(8);
+    testWidget->SetTextureId(textureManager.GetTextureId("rounded_rectangle"));
 
     testWidget->SetColor({ 1.f, 0.f, 0.f, 1.f });
     testWidget->SetPadding({ 0.01f, 0.01f * renderer.GetAspectRatio() });
     widgetManager.AddWidget("test_widget", testWidget);
-
-    renderer.RegisterTexture("../images/dirt_map.png");
-    renderer.RegisterTexture("../images/stone_map.png");
-    renderer.RegisterTexture("../images/cold_stone_map.png");
-    renderer.RegisterTexture("../images/hot_stone_map.png");
-    renderer.RegisterTexture("../images/limestone_map.png");
-    renderer.RegisterTexture("../images/granite_map.png");
-    renderer.RegisterTexture("../images/Calibri.png");
-    renderer.RegisterTexture("../images/rounded_rectangle.png");
-    renderer.SyncTextureUpdates();
 }
 
 void engine::BeginFrame()
