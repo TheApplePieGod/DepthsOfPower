@@ -8,8 +8,15 @@
 
 void engine::Initialize()
 {
-    renderer.Initialize(800, 600, 100000, 100000, "Depths of Power", "../shaders/main.vert.spv", "../shaders/main.frag.spv");
+    renderer.Initialize(800, 600, "Depths of Power", "../images/default-texture.png");
     inputManager.Initialize();
+
+    diamond_graphics_pipeline_create_info gpCreateInfo = {};
+    gpCreateInfo.vertexShaderPath = "../shaders/main.vert.spv";
+    gpCreateInfo.fragmentShaderPath = "../shaders/main.frag.spv";
+    gpCreateInfo.maxVertexCount = 100000;
+    gpCreateInfo.maxIndexCount = 100000;
+    renderer.CreateGraphicsPipeline(gpCreateInfo);
 
     // initialize textures
     textureManager.RegisterTexture(renderer, "dirt", "../images/tiles/maps/dirt_map.png");
@@ -75,6 +82,8 @@ void engine::BeginFrame()
 
     glm::vec2 camDimensions = { 500.f, 500.f / renderer.GetAspectRatio() };
     renderer.BeginFrame(diamond_camera_mode::OrthographicViewportIndependent, camDimensions, mainCamera.GetViewMatrix());
+
+    renderer.SetGraphicsPipeline(0);
 }
 
 void engine::HandleInput()

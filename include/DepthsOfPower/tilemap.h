@@ -1,7 +1,7 @@
 #pragma once
 #include <DepthsOfPower/util/basic.h>
 #include <vector>
-#include <vec2.hpp>
+#include <glm/vec2.hpp>
 
 struct tile
 {

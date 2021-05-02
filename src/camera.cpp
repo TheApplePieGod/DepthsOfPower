@@ -1,5 +1,5 @@
 #include <DepthsOfPower/camera.h>
-#include <gtc/matrix_transform.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 void camera::SetPosition(glm::vec2 newPos)
 {

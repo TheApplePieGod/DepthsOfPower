@@ -2,10 +2,10 @@
 #include <DepthsOfPower/engine.h>
 #include <iostream>
 #include <map>
-#include <vec3.hpp>
+#include <glm/vec3.hpp>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-#include <stb_image_write.h>
+#include <stb/stb_image_write.h>
 
 extern engine* Engine;
 

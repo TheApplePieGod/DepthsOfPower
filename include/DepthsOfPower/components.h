@@ -1,6 +1,6 @@
 #pragma once
 #include <DepthsOfPower/util/basic.h>
-#include <vec2.hpp>
+#include <glm/vec2.hpp>
 #include <optional>
 
 struct entity;
