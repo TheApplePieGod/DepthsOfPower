@@ -11,6 +11,11 @@ int main(int argc, char** argv)
     while (Engine->IsRunning())
     {
         Engine->BeginFrame();
+        Engine->HandleInput();
+
+        Engine->TickPhysics();
+        Engine->TickComponents();
+        Engine->RenderTestScene();
 
         Engine->EndFrame();
     }
