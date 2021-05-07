@@ -41,7 +41,8 @@ void engine::Initialize()
     map = tilemap(mapSizeX, mapSizeY, tileSizeMeters);
     world_generator generator;
     generator.SetSeed(1337);
-    generator.Generate(map, true);
+    //generator.Generate(map, true);
+    generator.Test(map);
 
     // init player entity
     physics_component physicsComp;

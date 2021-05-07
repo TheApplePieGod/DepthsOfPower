@@ -4,6 +4,8 @@
 #include <thread>
 #include <DepthsOfPower/engine.h>
 
+#include <stb/stb_image_write.h>
+
 extern engine* Engine;
 
 void Generate_Thread(tilemap& map, int startY, int lines, int seed)
@@ -162,4 +164,165 @@ void world_generator::Generate(tilemap& map, bool savePreview)
 
     if (savePreview)
         map.DebugSaveMapToFile(false);
+}
+
+void world_generator::Test(tilemap& map)
+{
+    int xMax = (int)map.GetWidth();
+    int yMax = (int)map.GetHeight();
+
+    std::vector<f32> basicNoiseOutput(xMax * yMax);
+    std::vector<f32> biomeNoiseOutput(xMax * yMax);
+    std::vector<f32> caveNoiseOutput(xMax * yMax);
+
+    auto fnSimplex = FastNoise::New<FastNoise::Simplex>();
+    auto fnFractal = FastNoise::New<FastNoise::FractalFBm>();
+    auto fnCaveFractal = FastNoise::New<FastNoise::FractalRidged>();
+
+    fnFractal->SetSource(fnSimplex);
+    fnFractal->SetOctaveCount(3);
+    fnFractal->GenUniformGrid2D(basicNoiseOutput.data(), 0, 0, xMax, yMax, 0.03f, seed);
+    fnFractal->GenUniformGrid2D(biomeNoiseOutput.data(), 0, 0, xMax, yMax, 0.02f, seed + 1);
+
+    fnCaveFractal->SetSource(fnSimplex);
+    fnCaveFractal->SetOctaveCount(2);
+    fnCaveFractal->GenUniformGrid2D(caveNoiseOutput.data(), 0, 0, xMax, yMax, 0.04f, seed + 2);
+
+    srand(seed);
+
+    SetupMap(map, basicNoiseOutput);
+    GenerateBiomes(map, biomeNoiseOutput);
+    CreateCaves(map, basicNoiseOutput, caveNoiseOutput);
+
+    map.DebugSaveMapToFile(false);
+}
+
+void world_generator::SetupMap(tilemap& map, const std::vector<f32>& basicNoise)
+{
+    texture_manager& texManager = Engine->GetTextureManager();
+
+    int xMax = (int)map.GetWidth();
+    int yMax = (int)map.GetHeight();
+
+    f32 initialValuesRatio = 500.f; // inital map height that the gen params were tuned for
+    f32 surfaceRigidness = 0.01f * (initialValuesRatio / map.GetHeight()); // affects the rigidness of the surface
+    f32 groundStartThreshold = 0.8f; // affects when the sky ends and the ground starts generating
+
+    f32 stoneStart = groundStartThreshold - (40.f / yMax);
+    tile newTile;
+    for (int y = 0; y < yMax; y++)
+    {
+        f32 depthGradient = (f32)y / yMax;
+
+        for (int x = 0; x < xMax; x++)
+        {
+            f32 depthPerturb = basicNoise[x] * surfaceRigidness;
+            if (depthGradient + depthPerturb > groundStartThreshold)
+                continue;
+
+            if (depthGradient + depthPerturb > stoneStart)
+                newTile.textureId = texManager.GetTextureId("dirt");
+            else
+                newTile.textureId = texManager.GetTextureId("stone");
+
+            map.UpdateTile(x + y * xMax, newTile);
+        }
+    }
+}
+
+void world_generator::CreateCaves(tilemap& map, const std::vector<f32>& basicNoise, const std::vector<f32>& caveNoise)
+{
+    int xMax = (int)map.GetWidth();
+    int yMax = (int)map.GetHeight();
+
+    f32 cavePerturbScale = 0.25f; // affects how jagged cave generation is
+    f32 caveThreshold = 0.9f; // affects how big caves are (-1 to 1)
+    f32 caveMaxThreshold = 0.5f; // affects the maximum size of caves regardless of depth
+    f32 caveDepthScale = 1.f; // how much depth affects cave size
+
+    tile newTile;
+    for (int y = 0; y < yMax; y++)
+    {
+        f32 depthGradient = (f32)y / yMax;
+
+        for (int x = 0; x < xMax; x++)
+        {
+            f32 cavePerturb = basicNoise[x + y * xMax] * cavePerturbScale;
+            f32 caveNoiseFinal = caveNoise[x + y * xMax] + std::min(depthGradient * caveDepthScale, caveMaxThreshold) + cavePerturb;
+            if (caveNoiseFinal > caveThreshold)
+            {
+                newTile.textureId = 0;
+                map.UpdateTile(xMax * yMax - (x + y * xMax) - 1, newTile);
+            }
+        }
+    }
+}
+
+void world_generator::GenerateBiomes(tilemap& map, const std::vector<f32>& biomeNoise)
+{
+    texture_manager& texManager = Engine->GetTextureManager();
+
+    int xMax = (int)map.GetWidth();
+    int yMax = (int)map.GetHeight();
+
+    std::vector<biome> biomeList;
+    biome biomeInfo;
+
+    biomeInfo.textureId = texManager.GetTextureId("marble");
+    biomeInfo.frequency = 0.0001f;
+    biomeInfo.maxRadius = 10;
+    biomeInfo.edgeDistortionFactor = 10.f;
+    biomeInfo.depthRange = glm::vec2(0.75f, 0.5f);
+    biomeList.push_back(biomeInfo);
+
+    biomeInfo.textureId = texManager.GetTextureId("limestone");
+    biomeInfo.frequency = 0.0001f;
+    biomeInfo.maxRadius = 10;
+    biomeInfo.edgeDistortionFactor = 10.f;
+    biomeInfo.depthRange = glm::vec2(0.5f, 0.3f);
+    biomeList.push_back(biomeInfo);
+
+    biomeInfo.textureId = texManager.GetTextureId("basalt");
+    biomeInfo.frequency = 0.0005f;
+    biomeInfo.maxRadius = 10;
+    biomeInfo.edgeDistortionFactor = 10.f;
+    biomeInfo.depthRange = glm::vec2(0.35f, 0.0f);
+    biomeList.push_back(biomeInfo);
+
+    tile newTile;
+    for (const biome& biomeObj : biomeList)
+    {
+        int biomeCount = (int)(xMax * yMax * biomeObj.frequency);
+        for (int i = 0; i < biomeCount; i++)
+        {
+            // select a random point on the map
+            int xPos = rand() % xMax;
+            int yPos = (int)(biomeObj.depthRange.x * yMax) - (rand() % (int)(yMax * (biomeObj.depthRange.y - biomeObj.depthRange.x)));
+
+            f32 baselineNoise = biomeNoise[xPos + yPos * xMax];
+
+            // set the pixels based on the radius of the biome
+            for (int y = yPos - biomeObj.maxRadius * 2; y <= yPos + biomeObj.maxRadius * 2; y++)
+            {
+                if (y < 0 || y >= yMax)
+                    continue;
+
+                for (int x = xPos - biomeObj.maxRadius * 2; x <= xPos + biomeObj.maxRadius * 2; x++)
+                {
+                    if (x < 0 || x >= xMax)
+                        continue;
+
+                    f32 noiseVal = biomeNoise[x + y * xMax];
+                    int modifiedRadius = (int)(biomeObj.maxRadius + noiseVal * biomeObj.edgeDistortionFactor);
+
+                    if (sqrt(pow(x - xPos, 2) + pow(y - yPos, 2)) > modifiedRadius)
+                       continue;
+
+                    u64 tileIndex = x + y * xMax;
+                    newTile.textureId = biomeObj.textureId;
+                    map.UpdateTile(tileIndex, newTile);
+                }
+            }
+        }
+    }
 }
