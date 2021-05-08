@@ -36,13 +36,12 @@ void engine::Initialize()
 
     // initialize tilemap and position camera at the center of it
     int mapSizeX = 200;
-    int mapSizeY = 500;
+    int mapSizeY = 5000;
     f32 tileSizeMeters = 1.f;
     map = tilemap(mapSizeX, mapSizeY, tileSizeMeters);
     world_generator generator;
     generator.SetSeed(1337);
-    //generator.Generate(map, true);
-    generator.Test(map);
+    generator.Generate(map, true);
 
     // init player entity
     physics_component physicsComp;

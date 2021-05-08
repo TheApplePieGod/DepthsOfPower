@@ -43,5 +43,7 @@ target_link_libraries(DepthsOfPower "${FastNoiseD}")
 # find_library(FastNoise FastNoise "lib/FastNoise2")
 # target_link_libraries(DepthsOfPower "${FastNoise}")
 
+set_target_properties(DepthsOfPower PROPERTIES LINK_FLAGS "/ignore:4103")
+
 # Tell C++ compiler to use C++20 features.
 target_compile_features(DepthsOfPower PUBLIC cxx_std_20)
