@@ -30,12 +30,11 @@ class world_generator
 public:
     inline void SetSeed(int newSeed) { seed = newSeed; };
     void Generate(tilemap& map, bool savePreview = false);
-    void GenerateV2(tilemap& map, bool savePreview = false);
 
 private:
     int seed = 1337;
     void InitializeGenerationData();
-    void GenerateOresAndBiomes(tilemap& map);
+    void GenerateBiomes(tilemap& map);
     std::vector<heat_level> heatLevels; // array of texture indexes representing unique heat levels
     generation_parameters genParams;
 

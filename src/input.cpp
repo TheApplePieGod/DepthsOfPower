@@ -76,12 +76,14 @@ void input_manager::SetMouseButtonPressed(int buttonIndex, bool value)
     if (buttonIndex == 1)
     {
         lmb[0] = value;
-        lmb[1] = value;
+        if (value)
+            lmb[1] = value;
     }
     else if (buttonIndex == 2)
     {
         rmb[0] = value;
-        rmb[1] = value;
+        if (value)
+            rmb[1] = value;
     }
 }
 

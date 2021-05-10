@@ -112,7 +112,7 @@ void world_generator::Generate(tilemap& map, bool savePreview)
         th.join();
     }
 
-    GenerateOresAndBiomes(map);
+    GenerateBiomes(map);
 
     // Generate caves
     currentLine = 0;
@@ -221,7 +221,7 @@ void world_generator::InitializeGenerationData()
     }
 }
 
-void world_generator::GenerateOresAndBiomes(tilemap& map)
+void world_generator::GenerateBiomes(tilemap& map)
 {
     texture_manager& texManager = Engine->GetTextureManager();
 

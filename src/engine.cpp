@@ -8,35 +8,41 @@
 
 void engine::Initialize()
 {
-    renderer.Initialize(800, 600, "Depths of Power", "../images/default-texture.png");
+    renderer.Initialize(800, 600, "Depths of Power", "../../assets/default-texture.png");
     inputManager.Initialize();
+    soundManager.Initialize();
 
     diamond_graphics_pipeline_create_info gpCreateInfo = {};
-    gpCreateInfo.vertexShaderPath = "../shaders/main.vert.spv";
-    gpCreateInfo.fragmentShaderPath = "../shaders/main.frag.spv";
+    gpCreateInfo.vertexShaderPath = "../../shaders/main.vert.spv";
+    gpCreateInfo.fragmentShaderPath = "../../shaders/main.frag.spv";
     gpCreateInfo.maxVertexCount = 100000;
     gpCreateInfo.maxIndexCount = 100000;
     renderer.CreateGraphicsPipeline(gpCreateInfo);
 
     // initialize textures
-    textureManager.RegisterTexture(renderer, "dirt", "../images/tiles/maps/dirt_map.png");
-    textureManager.RegisterTexture(renderer, "stone", "../images/tiles/maps/stone_map.png");
-    textureManager.RegisterTexture(renderer, "cold_stone", "../images/tiles/maps/cold_stone_map.png");
-    textureManager.RegisterTexture(renderer, "hot_stone", "../images/tiles/maps/hot_stone_map.png");
-    textureManager.RegisterTexture(renderer, "limestone", "../images/tiles/maps/limestone_map.png");
-    textureManager.RegisterTexture(renderer, "granite", "../images/tiles/maps/granite_map.png");
-    textureManager.RegisterTexture(renderer, "marble", "../images/tiles/maps/marble_map.png");
-    textureManager.RegisterTexture(renderer, "basalt", "../images/tiles/maps/basalt_map.png");
-    textureManager.RegisterTexture(renderer, "iron_ore", "../images/tiles/maps/iron_ore_map.png");
-    textureManager.RegisterTexture(renderer, "copper_ore", "../images/tiles/maps/copper_ore_map.png");
+    textureManager.RegisterTexture(renderer, "dirt", "../../assets/tiles/maps/dirt_map.png");
+    textureManager.RegisterTexture(renderer, "stone", "../../assets/tiles/maps/stone_map.png");
+    textureManager.RegisterTexture(renderer, "cold_stone", "../../assets/tiles/maps/cold_stone_map.png");
+    textureManager.RegisterTexture(renderer, "hot_stone", "../../assets/tiles/maps/hot_stone_map.png");
+    textureManager.RegisterTexture(renderer, "limestone", "../../assets/tiles/maps/limestone_map.png");
+    textureManager.RegisterTexture(renderer, "granite", "../../assets/tiles/maps/granite_map.png");
+    textureManager.RegisterTexture(renderer, "marble", "../../assets/tiles/maps/marble_map.png");
+    textureManager.RegisterTexture(renderer, "basalt", "../../assets/tiles/maps/basalt_map.png");
+    textureManager.RegisterTexture(renderer, "iron_ore", "../../assets/tiles/maps/iron_ore_map.png");
+    textureManager.RegisterTexture(renderer, "copper_ore", "../../assets/tiles/maps/copper_ore_map.png");
     
-    textureManager.RegisterTexture(renderer, "font_calibri", "../images/fonts/calibri.png");
-    textureManager.RegisterTexture(renderer, "rounded_rectangle", "../images/rounded_rectangle.png");
+    textureManager.RegisterTexture(renderer, "character", "../../assets/character.png");
+    textureManager.RegisterTexture(renderer, "font_calibri", "../../assets/fonts/calibri.png");
+    textureManager.RegisterTexture(renderer, "rounded_rectangle", "../../assets/rounded_rectangle.png");
     renderer.SyncTextureUpdates();
+
+    soundManager.RegisterSound("block_break", "../../assets/block_break.wav");
+    soundManager.RegisterSound("laser", "../../assets/laser.wav");
+    soundManager.RegisterSound("music", "../../assets/music.wav");
 
     // initialize tilemap and position camera at the center of it
     int mapSizeX = 200;
-    int mapSizeY = 5000;
+    int mapSizeY = 500;
     f32 tileSizeMeters = 1.f;
     map = tilemap(mapSizeX, mapSizeY, tileSizeMeters);
     world_generator generator;
@@ -100,13 +106,33 @@ void engine::HandleInput()
     if (inputManager.IsMouseDown(1)) // lmb
     {
         glm::vec2 mouseWorldPos = inputManager.GetMouseWorldPosition();
+        glm::vec2 soundLocation = PixelsToMeters(mouseWorldPos) - PixelsToMeters(mainCamera.GetPosition());
+
+        if (breakingSoundIndex == -1)
+        {
+            sound_settings settings;
+            settings.looping = true;
+            settings.gain = 0.5f;
+            settings.rolloffFactor = 0.25f;
+            settings.referenceDistance = 4.f;
+
+            breakingSoundIndex = soundManager.PlaySoundAtLocation("laser", soundLocation, settings);
+        }
+        else
+            soundManager.UpdateSoundLocation(breakingSoundIndex, soundLocation);
+
         u64 tileIndex = map.GetTileAtLocation(mouseWorldPos);
-        if (tileIndex != -1)
+        if (tileIndex != -1 && map.GetTile(tileIndex).textureId != 0)
         {
             tile newTile;
             newTile.textureId = 0;
             map.UpdateTile(tileIndex, newTile);
         }
+    }
+    else if (breakingSoundIndex != -1)
+    {
+        soundManager.StopSound(breakingSoundIndex);
+        breakingSoundIndex = -1;
     }
 
     if (inputManager.IsMouseDown(2)) // rmb
@@ -122,14 +148,18 @@ void engine::HandleInput()
     }
 }
 
-void engine::RenderTestScene()
+void engine::RenderScene()
 {
+    // Draw the tilemap    
+    map.Draw(mainCamera.GetPosition());
+
+    // Draw the player
     diamond_transform transform{};
     transform.scale = entityList[0].physicsComponent.value().extent * 2.f;
     transform.location = entityList[0].position;
-    
-    map.Draw(mainCamera.GetPosition());
-    renderer.DrawQuad(0, transform, { 0.f, 0.f, 0.f, 1.f });
+    renderer.DrawQuad(textureManager.GetTextureId("character"), transform, { 1.f, 1.f, 1.f, 1.f });
+
+    // Draw widgets
     widgetManager.DrawAllWidgets();
 }
 
@@ -169,6 +199,7 @@ void engine::TickPhysics()
 
 void engine::TickComponents()
 {
+    soundManager.Tick();
     for (u32 i = 0; i < entityList.size(); i++)
     {
         
@@ -218,6 +249,7 @@ void engine::EndFrame()
 void engine::Cleanup()
 {
     renderer.Cleanup();
+    soundManager.Cleanup();
 }
 
 bool engine::IsRunning()

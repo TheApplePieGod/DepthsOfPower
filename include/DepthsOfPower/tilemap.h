@@ -39,6 +39,7 @@ public:
     void UpdateTile(u64 tileIndex, tile newData);
     void DebugSaveMapToFile(bool transparent);
 
+    inline tile GetTile(u64 tileIndex) { return tiles[tileIndex]; };
     inline u32 GetWidth() { return width; };
     inline u32 GetHeight() { return height; };
     inline u32 GetSize() { return width * height; };
