@@ -16,7 +16,6 @@ int main(int argc, char** argv)
         Engine->BeginFrame();
 
         Engine->TickComponents();
-        Engine->RenderScene();
 
         Engine->EndFrame();
     }

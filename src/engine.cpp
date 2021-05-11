@@ -52,14 +52,17 @@ void engine::Initialize()
     // init player entity
     physics_component physicsComp;
     entity player;
-    player.position = { MetersToPixels(tileSizeMeters) * mapSizeX * 0.5f, MetersToPixels(tileSizeMeters) * mapSizeY * 0.95f };
-    player.position.y = map.GetWorldLocationOfTile(map.RayTraceForTile(player.position, { 0.f, -1.f }, 0)).y + MetersToPixels(3.f);
+    player.transform.location = { MetersToPixels(tileSizeMeters) * mapSizeX * 0.5f, MetersToPixels(tileSizeMeters) * mapSizeY * 0.95f };
+    player.transform.location.y = map.GetWorldLocationOfTile(map.RayTraceForTile(player.transform.location, { 0.f, -1.f }, 0)).y + MetersToPixels(3.f);
     physicsComp.extent = { MetersToPixels(0.4f), MetersToPixels(0.9f) };
     player.physicsComponent = physicsComp;
     animation_component animationComp;
     animationComp.skeleton.Initialize("../../assets/character.skel");
     player.animationComponent = animationComp;
     entityList.push_back(player); // entity 0 should be the main player
+
+    //animation anim = entityList[0].animationComponent.value().skeleton.LoadAnimation("../../assets/character_idle.anim");
+    //entityList[0].animationComponent.value().skeleton.PlayAnimation(anim, false);
 
     // create widgets
     widget* testWidget = new widget({ 0.0f, 0.f }, { 0.25f, 0.5f });
@@ -87,12 +90,15 @@ void engine::Initialize()
 void engine::BeginFrame()
 {
     frameStart = std::chrono::high_resolution_clock::now();
-    mainCamera.SetPosition(entityList[0].position);
+    mainCamera.SetPosition(entityList[0].transform.location);
 
     glm::vec2 camDimensions = { 500.f, 500.f / renderer.GetAspectRatio() };
     renderer.BeginFrame(diamond_camera_mode::OrthographicViewportIndependent, camDimensions, mainCamera.GetViewMatrix());
 
     renderer.SetGraphicsPipeline(0);
+
+    // Draw the tilemap    
+    map.Draw(mainCamera.GetPosition());
 }
 
 void engine::HandleInput()
@@ -151,27 +157,9 @@ void engine::HandleInput()
     }
 }
 
-void engine::RenderScene()
-{
-    // Draw the tilemap    
-    map.Draw(mainCamera.GetPosition());
-
-    // Draw the player
-    diamond_transform transform{};
-    transform.scale = entityList[0].physicsComponent.value().extent * 2.f;
-    transform.location = entityList[0].position;
-    //renderer.DrawQuad(textureManager.GetTextureId("character"), transform, { 1.f, 1.f, 1.f, 1.f });
-    entityList[0].animationComponent.value().skeleton.Draw(transform);
-    entityList[0].animationComponent.value().skeleton.bones[0].currentRotation += 0.25f;
-    entityList[0].animationComponent.value().skeleton.bones[1].currentRotation += 0.5f;
-
-    // Draw widgets
-    widgetManager.DrawAllWidgets();
-}
-
 void engine::TickPhysics()
 {
-    // once we get more collision, move all of this into a collision manager
+    // once we get more collision, move all of this into a collision manager / TickComponents
     int numSteps = 10; // todo: scale num steps by dt
     f32 movementSpeed = (deltaTime / 1000) * MetersToPixels(30.f) / numSteps;
     f32 gravity = (deltaTime / 1000) * MetersToPixels(25.f) / numSteps;
@@ -184,10 +172,10 @@ void engine::TickPhysics()
             finalMovement -= movementSpeed;
         if (inputManager.IsKeyPressed("d"))
             finalMovement += movementSpeed;
-        glm::vec2 oldPosition = entityList[0].position;
-        entityList[0].position.x += finalMovement;
-        if (map.IsColliding(entityList[0].position, entityList[0].physicsComponent.value().extent))
-            entityList[0].position = oldPosition;
+        glm::vec2 oldPosition = entityList[0].transform.location;
+        entityList[0].transform.location.x += finalMovement;
+        if (map.IsColliding(entityList[0].transform.location, entityList[0].physicsComponent.value().extent))
+            entityList[0].transform.location = oldPosition;
 
         // y movement
         finalMovement = 0.f;
@@ -196,10 +184,10 @@ void engine::TickPhysics()
         if (inputManager.IsKeyPressed("s"))
             finalMovement -= movementSpeed * 1.2f;
         finalMovement -= gravity;
-        oldPosition = entityList[0].position;
-        entityList[0].position.y += finalMovement;
-        if (map.IsColliding(entityList[0].position, entityList[0].physicsComponent.value().extent))
-            entityList[0].position = oldPosition;
+        oldPosition = entityList[0].transform.location;
+        entityList[0].transform.location.y += finalMovement;
+        if (map.IsColliding(entityList[0].transform.location, entityList[0].physicsComponent.value().extent))
+            entityList[0].transform.location = oldPosition;
     }
 }
 
@@ -208,12 +196,19 @@ void engine::TickComponents()
     soundManager.Tick();
     for (u32 i = 0; i < entityList.size(); i++)
     {
-        
+        if (entityList[i].animationComponent.has_value())
+        {
+            entityList[i].animationComponent.value().skeleton.TickAnimation(static_cast<f32>(deltaTime));
+            entityList[i].animationComponent.value().skeleton.Draw(entityList[i].transform);
+        }
     }
 }
 
 void engine::EndFrame()
 {
+    // Draw widgets
+    widgetManager.DrawAllWidgets();
+
     inputManager.ClearJustPressedFlags();
 
     glm::vec4 clearColor = { 0.009, 0.009, 0.009, 1.f };
@@ -246,7 +241,7 @@ void engine::EndFrame()
     std::string tempText = "Delta: " + std::to_string(deltaTime);
     widgetManager.GetWidget<widget>("test_widget")->GetChild<widget_text>("text_delta")->SetText(tempText.c_str());
 
-    tempText = "Pos: (" + std::to_string((int)entityList[0].position.x) + ", " + std::to_string((int)entityList[0].position.y) + ")";
+    tempText = "Pos: (" + std::to_string((int)entityList[0].transform.location.x) + ", " + std::to_string((int)entityList[0].transform.location.y) + ")";
     widgetManager.GetWidget<widget>("test_widget")->GetChild<widget_text>("text_pos")->SetText(tempText.c_str());
 
     //std::cout << "dt: " << deltaTime << std::endl;

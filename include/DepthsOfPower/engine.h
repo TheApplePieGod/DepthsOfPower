@@ -20,7 +20,6 @@ public:
     void HandleInput();
     void TickPhysics();
     void TickComponents();
-    void RenderScene();
     void EndFrame();
     void Cleanup();
 

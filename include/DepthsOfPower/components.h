@@ -1,6 +1,7 @@
 #pragma once
 #include <DepthsOfPower/util/basic.h>
 #include <DepthsOfPower/animation.h>
+#include <Diamond/diamond.h>
 #include <glm/vec2.hpp>
 #include <optional>
 
@@ -17,7 +18,7 @@ struct animation_component
 
 struct entity
 {
-    glm::vec2 position;
+    diamond_transform transform;
     std::optional<physics_component> physicsComponent;
     std::optional<animation_component> animationComponent;
 };
