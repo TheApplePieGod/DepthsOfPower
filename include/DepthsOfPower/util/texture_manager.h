@@ -6,7 +6,7 @@
 class texture_manager
 {
 public:
-    void RegisterTexture(diamond& renderer, const char* referenceName, const char* filepath); // wraps the diamond API
+    int RegisterTexture(diamond& renderer, const char* referenceName, const char* filepath); // wraps the diamond API
     int GetTextureId(const char* referenceName);
 
 private:

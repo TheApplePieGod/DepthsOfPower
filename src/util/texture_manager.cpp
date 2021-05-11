@@ -1,9 +1,11 @@
 #include <DepthsOfPower/util/texture_manager.h>
 
-void texture_manager::RegisterTexture(diamond& renderer, const char* referenceName, const char* filepath)
+int texture_manager::RegisterTexture(diamond& renderer, const char* referenceName, const char* filepath)
 {
     std::string name = referenceName;
-    idTable[name] = renderer.RegisterTexture(filepath);
+    int id = renderer.RegisterTexture(filepath);
+    idTable[name] = id;
+    return id;
 }
 
 int texture_manager::GetTextureId(const char* referenceName)
