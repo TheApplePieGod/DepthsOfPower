@@ -61,8 +61,8 @@ void engine::Initialize()
     player.animationComponent = animationComp;
     entityList.push_back(player); // entity 0 should be the main player
 
-    //animation anim = entityList[0].animationComponent.value().skeleton.LoadAnimation("../../assets/character_idle.anim");
-    //entityList[0].animationComponent.value().skeleton.PlayAnimation(anim, false);
+    animation anim = entityList[0].animationComponent.value().skeleton.LoadAnimation("../../assets/character_walk.anim");
+    entityList[0].animationComponent.value().skeleton.PlayAnimation(anim, true);
 
     // create widgets
     widget* testWidget = new widget({ 0.0f, 0.f }, { 0.25f, 0.5f });

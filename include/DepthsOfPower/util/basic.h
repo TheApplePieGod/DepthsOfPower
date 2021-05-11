@@ -22,7 +22,7 @@ typedef double d64;
 #define Gigabytes(Value) (Megabytes(Value)*1024LL)
 #define Terabytes(Value) (Gigabytes(Value)*1024LL)
 #define DegreesToRadians(Degrees) (Degrees*Pi32/180.f)
-#define MetersToPixels(Value) (int)(Value * PixelsPerMeter)
+#define MetersToPixels(Value) (Value * PixelsPerMeter)
 #define PixelsToMeters(Value) (Value / PixelsPerMeter)
 
 #define Assert(Expression) if(!(Expression)) {*(int *)0 = 0;} // Dereference a NULL pointer

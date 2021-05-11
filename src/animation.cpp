@@ -35,11 +35,12 @@ void skeleton::DrawBone(int boneIndex, glm::vec2 bonePos)
     bone& bone = bones[boneIndex];
 
     glm::vec2 direction = { cos(DegreesToRadians(bone.currentRotation)), sin(DegreesToRadians(bone.currentRotation)) };
+    glm::vec2 boneBaseDirection = { cos(DegreesToRadians(bone.baseRotation)), sin(DegreesToRadians(bone.baseRotation)) };
     glm::vec2 boneEnd = bonePos + bone.currentPosition + direction * bone.length;
     diamond_transform boneTransform;
     glm::vec2 midpoint = (boneEnd + bonePos) * 0.5f; // midpoint
     boneTransform.location = { MetersToPixels(midpoint.x), MetersToPixels(midpoint.y) };
-    boneTransform.scale = { MetersToPixels(bone.scale.x) * 1, MetersToPixels(bone.scale.y) + MetersToPixels(bone.length * 0.5f) };
+    boneTransform.scale = { bone.scale.x * (MetersToPixels(bone.length) * abs(boneBaseDirection.x) + MetersToPixels(1.f) * abs(boneBaseDirection.y)), bone.scale.y * (MetersToPixels(bone.length) * abs(boneBaseDirection.y) + MetersToPixels(1.f) * abs(boneBaseDirection.x)) };
 
     // modify the image rotation based on the base rotation
     boneTransform.rotation = -bone.currentRotation + bone.baseRotation - bone.textureRotation;
@@ -162,17 +163,18 @@ int skeleton::ParseBoneJson(nlohmann::json jObj, int parentIndex)
 {
     bone newBone;
     std::string texturePath = jObj["texture"];
+    std::string textureIdentifier = identifier + "_" + newBone.name;
+
     newBone.name = jObj["name"];
-    newBone.textureId = Engine->GetTextureManager().RegisterTexture(Engine->GetRenderer(), (identifier + "_" + newBone.name).c_str(), texturePath.c_str());
+    newBone.textureId = Engine->GetTextureManager().GetTextureId(textureIdentifier.c_str());
+    if (newBone.textureId == 0)
+        newBone.textureId = Engine->GetTextureManager().RegisterTexture(Engine->GetRenderer(), textureIdentifier.c_str(), texturePath.c_str());
     newBone.textureRotation = jObj["textureRotation"];
     newBone.length = jObj["length"];
     newBone.scale = { jObj["scale"][0], jObj["scale"][1] };
-    newBone.baseRotation = jObj["rotation"];
+
     newBone.basePosition = { jObj["position"][0], jObj["position"][1] };
-
-    //if (parentIndex != -1) // root
-    //    newBone.basePosition += bones[parentIndex].basePosition;
-
+    newBone.baseRotation = jObj["rotation"];
     newBone.currentPosition = newBone.basePosition;
     newBone.currentRotation = newBone.baseRotation;
 
