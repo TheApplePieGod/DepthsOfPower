@@ -18,7 +18,6 @@ public:
     void Initialize();
     void BeginFrame();
     void HandleInput();
-    void TickPhysics();
     void TickComponents();
     void EndFrame();
     void Cleanup();
@@ -29,7 +28,7 @@ public:
     inline sound_manager& GetSoundManager() { return soundManager; }
     inline texture_manager& GetTextureManager() { return textureManager; }
     inline camera& GetCamera() { return mainCamera; };
-    inline entity& GetEntity(int id) { return entityList[id]; };
+    inline entity& GetEntity(int id) { return componentManager.entityList[id]; };
 
 private:
     diamond renderer;
@@ -38,8 +37,8 @@ private:
     sound_manager soundManager;
     widget_manager widgetManager;
     texture_manager textureManager;
+    component_manager componentManager;
     tilemap map = tilemap(1, 1, 1.f);
-    std::vector<entity> entityList;
 
     bool running = true;
     int breakingSoundIndex = -1;

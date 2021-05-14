@@ -50,16 +50,21 @@ void engine::Initialize()
     generator.Generate(map, true);
 
     // init player entity
+    transform_component playerTransform;
     physics_component physicsComp;
+    animation_component animComp;
     entity player;
-    player.transform.location = { MetersToPixels(tileSizeMeters) * mapSizeX * 0.5f, MetersToPixels(tileSizeMeters) * mapSizeY * 0.95f };
-    player.transform.location.y = map.GetWorldLocationOfTile(map.RayTraceForTile(player.transform.location, { 0.f, -1.f }, 0)).y + MetersToPixels(3.f);
+    componentManager.entityList.push_back(player); // entity 0 should be the main player
+
+    playerTransform.transform.location = { MetersToPixels(tileSizeMeters) * mapSizeX * 0.5f, MetersToPixels(tileSizeMeters) * mapSizeY * 0.95f };
+    playerTransform.transform.location.y = map.GetWorldLocationOfTile(map.RayTraceForTile(playerTransform.transform.location, { 0.f, -1.f }, 0)).y + MetersToPixels(3.f);
+    componentManager.GetTransformComponent(0, true) = playerTransform;
+
     physicsComp.extent = { MetersToPixels(0.4f), MetersToPixels(0.9f) };
-    player.physicsComponent = physicsComp;
-    animation_component animationComp;
-    animationComp.skeleton.Initialize("../../assets/character.skel");
-    player.animationComponent = animationComp;
-    entityList.push_back(player); // entity 0 should be the main player
+    componentManager.GetPhysicsComponent(0, true) = physicsComp;
+
+    animComp.skeleton.Initialize("../../assets/character.skel");
+    componentManager.GetAnimationComponent(0, true) = animComp;
 
     //animation anim = entityList[0].animationComponent.value().skeleton.LoadAnimation("../../assets/character_walk.anim");
     //entityList[0].animationComponent.value().skeleton.PlayAnimation(anim, true);
@@ -89,10 +94,10 @@ void engine::Initialize()
 
 void engine::BeginFrame()
 {
-    mainCamera.SetPosition(entityList[0].transform.location);
+    renderer.BeginFrame();
 
-    glm::vec2 camDimensions = { 500.f, 500.f / renderer.GetAspectRatio() };
-    renderer.BeginFrame(diamond_camera_mode::OrthographicViewportIndependent, camDimensions, mainCamera.GetViewMatrix());
+    // call every frame just to cover any resize events
+    renderer.UpdateCameraViewMode(diamond_camera_mode::OrthographicViewportIndependent, { 500.f, 500.f / renderer.GetAspectRatio() });
 
     renderer.SetGraphicsPipeline(0);
 
@@ -110,6 +115,18 @@ void engine::HandleInput()
         renderer.SetFullscreen(true);
     if (inputManager.WasKeyJustPressed("F2"))
         renderer.SetFullscreen(false);
+
+    // character movement
+    f32 movementSpeed = MetersToPixels(30.f);
+    physics_component& physicsComp = componentManager.GetPhysicsComponent(0);
+    if (inputManager.IsKeyPressed("a"))
+        physicsComp.velocity.x -= movementSpeed;
+    if (inputManager.IsKeyPressed("d"))
+        physicsComp.velocity.x += movementSpeed;
+    if (inputManager.IsKeyPressed("w"))
+        physicsComp.velocity.y += movementSpeed * 2.f;
+    if (inputManager.IsKeyPressed("s"))
+        physicsComp.velocity.y -= movementSpeed * 1.2f;
 
     if (inputManager.IsMouseDown(1)) // lmb
     {
@@ -156,55 +173,20 @@ void engine::HandleInput()
     }
 }
 
-void engine::TickPhysics()
-{
-    // once we get more collision, move all of this into a collision manager / TickComponents
-    int numSteps = 10; // todo: scale num steps by dt
-    f32 movementSpeed = (renderer.FrameDelta() / 1000) * MetersToPixels(30.f) / numSteps;
-    f32 gravity = (renderer.FrameDelta() / 1000) * MetersToPixels(25.f) / numSteps;
-
-    for (int i = 0; i < numSteps; i++)
-    {
-        // x movement
-        f32 finalMovement = 0.f;
-        if (inputManager.IsKeyPressed("a"))
-            finalMovement -= movementSpeed;
-        if (inputManager.IsKeyPressed("d"))
-            finalMovement += movementSpeed;
-        glm::vec2 oldPosition = entityList[0].transform.location;
-        entityList[0].transform.location.x += finalMovement;
-        if (map.IsColliding(entityList[0].transform.location, entityList[0].physicsComponent.value().extent))
-            entityList[0].transform.location = oldPosition;
-
-        // y movement
-        finalMovement = 0.f;
-        if (inputManager.IsKeyPressed("w"))
-            finalMovement += movementSpeed * 2.f;
-        if (inputManager.IsKeyPressed("s"))
-            finalMovement -= movementSpeed * 1.2f;
-        finalMovement -= gravity;
-        oldPosition = entityList[0].transform.location;
-        entityList[0].transform.location.y += finalMovement;
-        if (map.IsColliding(entityList[0].transform.location, entityList[0].physicsComponent.value().extent))
-            entityList[0].transform.location = oldPosition;
-    }
-}
-
 void engine::TickComponents()
 {
     soundManager.Tick();
-    for (u32 i = 0; i < entityList.size(); i++)
-    {
-        if (entityList[i].animationComponent.has_value())
-        {
-            entityList[i].animationComponent.value().skeleton.TickAnimation(static_cast<f32>(renderer.FrameDelta()));
-            entityList[i].animationComponent.value().skeleton.Draw(entityList[i].transform);
-        }
-    }
+    
+    componentManager.PhysicsSystem(renderer.FrameDelta(), map);
+    componentManager.AnimationSystem(renderer.FrameDelta());
+    componentManager.SpriteSystem();
 }
 
 void engine::EndFrame()
 {
+    mainCamera.SetPosition(componentManager.GetTransformComponent(0).transform.location);
+    renderer.SetCameraViewMatrix(mainCamera.GetViewMatrix());
+
     // Draw widgets
     widgetManager.DrawAllWidgets();
 
@@ -219,7 +201,8 @@ void engine::EndFrame()
     std::string tempText = "Delta: " + std::to_string(renderer.FrameDelta());
     widgetManager.GetWidget<widget>("test_widget")->GetChild<widget_text>("text_delta")->SetText(tempText.c_str());
 
-    tempText = "Pos: (" + std::to_string((int)entityList[0].transform.location.x) + ", " + std::to_string((int)entityList[0].transform.location.y) + ")";
+    glm::vec2 location = componentManager.GetTransformComponent(0).transform.location;
+    tempText = "Pos: (" + std::to_string((int)location.x) + ", " + std::to_string((int)location.y) + ")";
     widgetManager.GetWidget<widget>("test_widget")->GetChild<widget_text>("text_pos")->SetText(tempText.c_str());
 
     //std::cout << "dt: " << deltaTime << std::endl;
