@@ -61,8 +61,8 @@ void engine::Initialize()
     player.animationComponent = animationComp;
     entityList.push_back(player); // entity 0 should be the main player
 
-    animation anim = entityList[0].animationComponent.value().skeleton.LoadAnimation("../../assets/character_walk.anim");
-    entityList[0].animationComponent.value().skeleton.PlayAnimation(anim, true);
+    //animation anim = entityList[0].animationComponent.value().skeleton.LoadAnimation("../../assets/character_walk.anim");
+    //entityList[0].animationComponent.value().skeleton.PlayAnimation(anim, true);
 
     // create widgets
     widget* testWidget = new widget({ 0.0f, 0.f }, { 0.25f, 0.5f });
@@ -89,7 +89,6 @@ void engine::Initialize()
 
 void engine::BeginFrame()
 {
-    frameStart = std::chrono::high_resolution_clock::now();
     mainCamera.SetPosition(entityList[0].transform.location);
 
     glm::vec2 camDimensions = { 500.f, 500.f / renderer.GetAspectRatio() };
@@ -161,8 +160,8 @@ void engine::TickPhysics()
 {
     // once we get more collision, move all of this into a collision manager / TickComponents
     int numSteps = 10; // todo: scale num steps by dt
-    f32 movementSpeed = (deltaTime / 1000) * MetersToPixels(30.f) / numSteps;
-    f32 gravity = (deltaTime / 1000) * MetersToPixels(25.f) / numSteps;
+    f32 movementSpeed = (renderer.FrameDelta() / 1000) * MetersToPixels(30.f) / numSteps;
+    f32 gravity = (renderer.FrameDelta() / 1000) * MetersToPixels(25.f) / numSteps;
 
     for (int i = 0; i < numSteps; i++)
     {
@@ -198,7 +197,7 @@ void engine::TickComponents()
     {
         if (entityList[i].animationComponent.has_value())
         {
-            entityList[i].animationComponent.value().skeleton.TickAnimation(static_cast<f32>(deltaTime));
+            entityList[i].animationComponent.value().skeleton.TickAnimation(static_cast<f32>(renderer.FrameDelta()));
             entityList[i].animationComponent.value().skeleton.Draw(entityList[i].transform);
         }
     }
@@ -211,34 +210,13 @@ void engine::EndFrame()
 
     inputManager.ClearJustPressedFlags();
 
+    //std::this_thread::sleep_for(std::chrono::milliseconds(30));
+
     glm::vec4 clearColor = { 0.009, 0.009, 0.009, 1.f };
     renderer.EndFrame(clearColor);
 
-    //std::this_thread::sleep_for(std::chrono::milliseconds(30));
-
-    // average delta time for smoother steps
-    auto frameStop = std::chrono::high_resolution_clock::now();
-    double dt = std::max((double)(std::chrono::duration_cast<std::chrono::milliseconds>(frameStop - frameStart)).count(), 1.0);
-    deltaTimes[frameCount] = dt;
-    frameCount++;
-
-    if (frameCount == deltaTimes.size())
-    {
-        std::sort(deltaTimes.begin(), deltaTimes.end());
-        double avg = 0.f;
-        for (int i = 2; i < deltaTimes.size() - 3; i++)
-        {
-            avg += deltaTimes[i];
-        }
-        avg /= deltaTimes.size() - 4;
-
-        deltaTime = avg;
-
-        frameCount = 0;
-    }
-
     // update widget information
-    std::string tempText = "Delta: " + std::to_string(deltaTime);
+    std::string tempText = "Delta: " + std::to_string(renderer.FrameDelta());
     widgetManager.GetWidget<widget>("test_widget")->GetChild<widget_text>("text_delta")->SetText(tempText.c_str());
 
     tempText = "Pos: (" + std::to_string((int)entityList[0].transform.location.x) + ", " + std::to_string((int)entityList[0].transform.location.y) + ")";

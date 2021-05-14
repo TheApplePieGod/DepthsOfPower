@@ -43,10 +43,4 @@ private:
 
     bool running = true;
     int breakingSoundIndex = -1;
-
-    // delta time smoothing
-    double deltaTime = 0.f; // ms
-    std::array<double, 11> deltaTimes;
-    int frameCount = 0;
-    std::chrono::steady_clock::time_point frameStart;
 };

@@ -37,8 +37,9 @@ void skeleton::DrawBone(int boneIndex, glm::vec2 bonePos)
     glm::vec2 direction = { cos(DegreesToRadians(bone.currentRotation)), sin(DegreesToRadians(bone.currentRotation)) };
     glm::vec2 boneBaseDirection = { cos(DegreesToRadians(bone.baseRotation)), sin(DegreesToRadians(bone.baseRotation)) };
     glm::vec2 boneEnd = bonePos + bone.currentPosition + direction * bone.length;
+    glm::vec2 midpoint = (boneEnd + bonePos + bone.currentPosition) * 0.5f; // midpoint
+
     diamond_transform boneTransform;
-    glm::vec2 midpoint = (boneEnd + bonePos) * 0.5f; // midpoint
     boneTransform.location = { MetersToPixels(midpoint.x), MetersToPixels(midpoint.y) };
     boneTransform.scale = { bone.scale.x * (MetersToPixels(bone.length) * abs(boneBaseDirection.x) + MetersToPixels(1.f) * abs(boneBaseDirection.y)), bone.scale.y * (MetersToPixels(bone.length) * abs(boneBaseDirection.y) + MetersToPixels(1.f) * abs(boneBaseDirection.x)) };
 
