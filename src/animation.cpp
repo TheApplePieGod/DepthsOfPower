@@ -26,10 +26,10 @@ void skeleton::Draw(diamond_transform baseTransform)
     Assert(initialized);
 
     glm::vec2 locationMeters = { PixelsToMeters(baseTransform.location.x), PixelsToMeters(baseTransform.location.y) };
-    DrawBone(0, locationMeters); // root
+    DrawBone(0, locationMeters, baseTransform.zPosition); // root
 }
 
-void skeleton::DrawBone(int boneIndex, glm::vec2 bonePos)
+void skeleton::DrawBone(int boneIndex, glm::vec2 bonePos, f32 zPosition)
 {
     diamond& renderer = Engine->GetRenderer();
     bone& bone = bones[boneIndex];
@@ -42,6 +42,7 @@ void skeleton::DrawBone(int boneIndex, glm::vec2 bonePos)
     diamond_transform boneTransform;
     boneTransform.location = { MetersToPixels(midpoint.x), MetersToPixels(midpoint.y) };
     boneTransform.scale = { bone.scale.x * (MetersToPixels(bone.length) * abs(boneBaseDirection.x) + MetersToPixels(1.f) * abs(boneBaseDirection.y)), bone.scale.y * (MetersToPixels(bone.length) * abs(boneBaseDirection.y) + MetersToPixels(1.f) * abs(boneBaseDirection.x)) };
+    boneTransform.zPosition = zPosition;
 
     // modify the image rotation based on the base rotation
     boneTransform.rotation = -bone.currentRotation + bone.baseRotation - bone.textureRotation;
@@ -51,7 +52,7 @@ void skeleton::DrawBone(int boneIndex, glm::vec2 bonePos)
 
     for (int childIndex : bone.children)
     {
-        DrawBone(childIndex, boneEnd);
+        DrawBone(childIndex, boneEnd, zPosition);
     }
 }
 

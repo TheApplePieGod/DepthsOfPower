@@ -19,6 +19,9 @@ void engine::Initialize()
     gpCreateInfo.maxIndexCount = 100000;
     renderer.CreateGraphicsPipeline(gpCreateInfo);
 
+    gpCreateInfo.enableDepthTesting = false;
+    renderer.CreateGraphicsPipeline(gpCreateInfo);
+
     // initialize textures
     textureManager.RegisterTexture(renderer, "dirt", "../../assets/tiles/maps/dirt_map.png");
     textureManager.RegisterTexture(renderer, "stone", "../../assets/tiles/maps/stone_map.png");
@@ -32,6 +35,7 @@ void engine::Initialize()
     textureManager.RegisterTexture(renderer, "copper_ore", "../../assets/tiles/maps/copper_ore_map.png");
     
     textureManager.RegisterTexture(renderer, "character", "../../assets/character.png");
+    textureManager.RegisterTexture(renderer, "background_space", "../../assets/space.png");
     textureManager.RegisterTexture(renderer, "font_calibri", "../../assets/fonts/calibri.png");
     textureManager.RegisterTexture(renderer, "rounded_rectangle", "../../assets/rounded_rectangle.png");
     renderer.SyncTextureUpdates();
@@ -54,8 +58,10 @@ void engine::Initialize()
     physics_component physicsComp;
     animation_component animComp;
     entity player;
-    componentManager.entityList.push_back(player); // entity 0 should be the main player
+    player.identifier = "player";
+    componentManager.CreateEntity(player); // entity 0 should be the main player
 
+    playerTransform.transform.zPosition = 0.01f;
     playerTransform.transform.location = { MetersToPixels(tileSizeMeters) * mapSizeX * 0.5f, MetersToPixels(tileSizeMeters) * mapSizeY * 0.95f };
     playerTransform.transform.location.y = map.GetWorldLocationOfTile(map.RayTraceForTile(playerTransform.transform.location, { 0.f, -1.f }, 0)).y + MetersToPixels(3.f);
     componentManager.GetTransformComponent(0, true) = playerTransform;
@@ -65,9 +71,21 @@ void engine::Initialize()
 
     animComp.skeleton.Initialize("../../assets/character.skel");
     componentManager.GetAnimationComponent(0, true) = animComp;
+    
+    // init background sprites
+    entity background;
+    background.identifier = "background1";
+    int backgroundEntityId = componentManager.CreateEntity(background);
 
-    //animation anim = entityList[0].animationComponent.value().skeleton.LoadAnimation("../../assets/character_walk.anim");
-    //entityList[0].animationComponent.value().skeleton.PlayAnimation(anim, true);
+    transform_component backgroundTransform = playerTransform;
+    backgroundTransform.transform.scale = { MetersToPixels(ScreenMetersX + 1), MetersToPixels(ScreenMetersX) };
+    backgroundTransform.transform.zPosition = -0.01f;
+    backgroundTransform.followPlayer = true;
+    componentManager.GetTransformComponent(backgroundEntityId, true) = backgroundTransform;
+
+    sprite_component backgroundSprite;
+    backgroundSprite.textureId = textureManager.GetTextureId("background_space");
+    componentManager.GetSpriteComponent(backgroundEntityId, true) = backgroundSprite;
 
     // create widgets
     widget* testWidget = new widget({ 0.0f, 0.f }, { 0.25f, 0.5f });
@@ -103,6 +121,13 @@ void engine::BeginFrame()
 
     // Draw the tilemap    
     map.Draw(mainCamera.GetPosition());
+
+    // update backgrounds
+    int bkgId = componentManager.FindEntity("background1");
+    f32 backgroundSpeed = 0.00001f;
+    f32 backgroundScale = 2.f;
+    glm::vec2 playerLocation = componentManager.GetTransformComponent(0).transform.location;
+    componentManager.GetSpriteComponent(bkgId).texCoords = glm::vec4(playerLocation * backgroundSpeed, playerLocation * backgroundSpeed + glm::vec2(1.f, -1.f) * backgroundScale);
 }
 
 void engine::HandleInput()
@@ -178,6 +203,7 @@ void engine::TickComponents()
     soundManager.Tick();
     
     componentManager.PhysicsSystem(renderer.FrameDelta(), map);
+    componentManager.FollowPlayerSystem();
     componentManager.AnimationSystem(renderer.FrameDelta());
     componentManager.SpriteSystem();
 }
@@ -186,6 +212,8 @@ void engine::EndFrame()
 {
     mainCamera.SetPosition(componentManager.GetTransformComponent(0).transform.location);
     renderer.SetCameraViewMatrix(mainCamera.GetViewMatrix());
+
+    renderer.SetGraphicsPipeline(1);
 
     // Draw widgets
     widgetManager.DrawAllWidgets();

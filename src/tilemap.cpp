@@ -111,10 +111,10 @@ void tilemap::Draw(glm::vec2 cameraPos)
 
                 tile_connection connection = GetTileConnection(tileIndex);
 
-                vertices[vertexIndex] =     { {(-0.5f * scaleX) + (tileX * scaleX), (-0.5f * scaleY) + (tileY * scaleY)}, color, baseTextureCoords[0], tiles[tileIndex].textureId };
-                vertices[vertexIndex + 1] = { {(0.5f * scaleX) + (tileX * scaleX), (-0.5f * scaleY) + (tileY * scaleY)}, color, baseTextureCoords[1], tiles[tileIndex].textureId };
-                vertices[vertexIndex + 2] = { {(0.5f * scaleX) + (tileX * scaleX), (0.5f * scaleY) + (tileY * scaleY)}, color, baseTextureCoords[2], tiles[tileIndex].textureId };
-                vertices[vertexIndex + 3] = { {(-0.5f * scaleX) + (tileX * scaleX), (0.5f * scaleY) + (tileY * scaleY)}, color, baseTextureCoords[3], tiles[tileIndex].textureId };
+                vertices[vertexIndex] =     { {(-0.5f * scaleX) + (tileX * scaleX), (-0.5f * scaleY) + (tileY * scaleY), 0.f}, color, baseTextureCoords[0], tiles[tileIndex].textureId };
+                vertices[vertexIndex + 1] = { {(0.5f * scaleX) + (tileX * scaleX), (-0.5f * scaleY) + (tileY * scaleY), 0.f}, color, baseTextureCoords[1], tiles[tileIndex].textureId };
+                vertices[vertexIndex + 2] = { {(0.5f * scaleX) + (tileX * scaleX), (0.5f * scaleY) + (tileY * scaleY), 0.f}, color, baseTextureCoords[2], tiles[tileIndex].textureId };
+                vertices[vertexIndex + 3] = { {(-0.5f * scaleX) + (tileX * scaleX), (0.5f * scaleY) + (tileY * scaleY), 0.f}, color, baseTextureCoords[3], tiles[tileIndex].textureId };
                 vertices[vertexIndex].texCoord.x     += variationStep * static_cast<f32>(connection);
                 vertices[vertexIndex + 1].texCoord.x += variationStep * static_cast<f32>(connection);
                 vertices[vertexIndex + 2].texCoord.x += variationStep * static_cast<f32>(connection);

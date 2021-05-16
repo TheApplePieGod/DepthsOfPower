@@ -19,8 +19,6 @@ add_subdirectory("lib/openal-soft") # build the oal wrapper
 
 add_compile_definitions(DEPTHS_DEBUG)
 
-add_compile_options("/wd4103")
-
 file(GLOB SOURCES "src/*.cpp")
 file(GLOB UTILS "src/util/*.cpp")
 file(GLOB GUI "src/gui/*.cpp")

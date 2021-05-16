@@ -8,6 +8,7 @@
 struct transform_component
 {
     diamond_transform transform;
+    bool followPlayer = false;
 };
 
 struct physics_component
@@ -24,11 +25,13 @@ struct animation_component
 
 struct sprite_component
 {
-    int textureId;
+    int textureId = 0;
+    glm::vec4 texCoords = { 0.f, 0.f, 1.f, 1.f };
 };
 
 struct entity
 {
+    std::string identifier;
     int transformComponentId = -1;
     int physicsComponentId = -1;
     int animationComponentId = -1;
@@ -67,7 +70,6 @@ class tilemap;
 class component_manager
 {
 public:
-
     std::vector<entity> entityList;
 
     ENTITY_COMPONENT(transform_component, transformComponents, GetTransformComponent, CreateTransformComponent, transformComponentId)
@@ -75,11 +77,13 @@ public:
     ENTITY_COMPONENT(animation_component, animationComponents, GetAnimationComponent, CreateAnimationComponent, animationComponentId)
     ENTITY_COMPONENT(sprite_component, spriteComponents, GetSpriteComponent, CreateSpriteComponent, spriteComponentId)
 
+    void FollowPlayerSystem();
     void PhysicsSystem(double frameDelta, tilemap& map);
     void AnimationSystem(double frameDelta);
     void SpriteSystem();
 
     int CreateEntity(entity data);
+    int FindEntity(const char* identifier);
 
 private:
 

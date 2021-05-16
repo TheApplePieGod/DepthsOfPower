@@ -56,7 +56,7 @@ public:
 
 private:
     int ParseBoneJson(nlohmann::json jObj, int parentIndex);
-    void DrawBone(int boneIndex, glm::vec2 bonePos);
+    void DrawBone(int boneIndex, glm::vec2 bonePos, f32 zPosition);
 
     animation currentAnimation;
     f32 currentAnimationTime;

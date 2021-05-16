@@ -1,4 +1,5 @@
 #include <DepthsOfPower/engine.h>
+#include <algorithm>
 
 extern engine* Engine;
 
@@ -6,6 +7,35 @@ int component_manager::CreateEntity(entity data)
 {
     entityList.push_back(data);
     return static_cast<int>(entityList.size() - 1);
+}
+
+int component_manager::FindEntity(const char* identifier)
+{
+    std::string name = identifier;
+    for (u64 i = 0; i < entityList.size(); i++)
+    {
+        if (entityList[i].identifier == name)
+            return i;
+    }
+    return -1;
+}
+
+void component_manager::FollowPlayerSystem()
+{
+    for (u32 i = 0; i < entityList.size(); i++)
+    {
+        if (entityList[i].transformComponentId != -1)
+        {
+            transform_component& transformComp = transformComponents[entityList[i].transformComponentId];
+
+            if (transformComp.followPlayer)
+            {
+                // assumes entity zero is the player
+                transform_component& playerTransformComp = transformComponents[entityList[0].transformComponentId];
+                transformComp.transform.location = playerTransformComp.transform.location;
+            }
+        }
+    }
 }
 
 void component_manager::PhysicsSystem(double frameDelta, tilemap& map)
@@ -69,7 +99,7 @@ void component_manager::SpriteSystem()
             transform_component& transformComp = transformComponents[entityList[i].transformComponentId];
             sprite_component& spriteComp = spriteComponents[entityList[i].spriteComponentId];
 
-            renderer.DrawQuad(spriteComp.textureId, transformComp.transform);
+            renderer.DrawQuad(spriteComp.textureId, spriteComp.texCoords, transformComp.transform);
         }
     }
 }
